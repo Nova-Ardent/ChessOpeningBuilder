@@ -62,7 +62,7 @@ namespace Board.Pieces
 
 
                 File enPassantLeft = CurrentFile - 1;
-                if (boardState.Pieces[(int)enPassantLeft, (int)CurrentRank] is Pawn leftPawn && leftPawn.CanEnPassant)
+                if ((int)enPassantLeft >= 0 && boardState.Pieces[(int)enPassantLeft, (int)CurrentRank] is Pawn leftPawn && leftPawn.CanEnPassant)
                 {
                     yield return new MoveData()
                     {
@@ -73,7 +73,7 @@ namespace Board.Pieces
                 }
 
                 File enPassantRight = CurrentFile + 1;
-                if (boardState.Pieces[(int)enPassantRight, (int)CurrentRank] is Pawn rightPawn && rightPawn.CanEnPassant)
+                if ((int)enPassantRight <= 7 && boardState.Pieces[(int)enPassantRight, (int)CurrentRank] is Pawn rightPawn && rightPawn.CanEnPassant)
                 {
                     yield return new MoveData()
                     {
@@ -125,6 +125,28 @@ namespace Board.Pieces
                     {
                         yield return new MoveData() { File = diagnolFileRight, Rank = diagnolRank, Type = MoveType.Take };
                     }
+                }
+
+                File enPassantLeft = CurrentFile - 1;
+                if ((int)enPassantLeft >= 0 && boardState.Pieces[(int)enPassantLeft, (int)CurrentRank] is Pawn leftPawn && leftPawn.CanEnPassant)
+                {
+                    yield return new MoveData()
+                    {
+                        File = enPassantLeft,
+                        Rank = CurrentRank - 1,
+                        Type = MoveType.Enpassant
+                    };
+                }
+
+                File enPassantRight = CurrentFile + 1;
+                if ((int)enPassantRight <= 7 && boardState.Pieces[(int)enPassantRight, (int)CurrentRank] is Pawn rightPawn && rightPawn.CanEnPassant)
+                {
+                    yield return new MoveData()
+                    {
+                        File = enPassantRight,
+                        Rank = CurrentRank - 1,
+                        Type = MoveType.Enpassant
+                    };
                 }
             }
         }
