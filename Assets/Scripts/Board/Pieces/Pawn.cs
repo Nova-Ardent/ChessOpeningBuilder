@@ -8,6 +8,8 @@ namespace Board.Pieces
 {
     public class Pawn : Piece
     {
+        public bool CanEnPassant = false;
+
         public override IEnumerable<MoveData> GetMoves(BoardState boardState)
         {
             if (IsWhite)
@@ -55,6 +57,28 @@ namespace Board.Pieces
                     }
                 }
 
+
+                File enPassantLeft = CurrentFile - 1;
+                if (boardState.Pieces[(int)enPassantLeft, (int)CurrentRank] is Pawn leftPawn && leftPawn.CanEnPassant)
+                {
+                    yield return new MoveData()
+                    {
+                        File = enPassantLeft,
+                        Rank = CurrentRank + 1,
+                        Type = MoveType.Enpassant
+                    };
+                }
+
+                File enPassantRight = CurrentFile + 1;
+                if (boardState.Pieces[(int)enPassantRight, (int)CurrentRank] is Pawn rightPawn && rightPawn.CanEnPassant)
+                {
+                    yield return new MoveData()
+                    {
+                        File = enPassantRight,
+                        Rank = CurrentRank + 1,
+                        Type = MoveType.Enpassant
+                    };
+                }
             }
             else
             {

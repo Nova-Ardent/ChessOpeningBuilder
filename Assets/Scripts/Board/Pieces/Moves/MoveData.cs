@@ -8,6 +8,7 @@ namespace Board.Pieces.Moves
         Move,
         Take,
         Castle,
+        Enpassant,
     }
 
     public struct MoveData

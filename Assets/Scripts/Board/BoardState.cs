@@ -25,7 +25,7 @@ namespace Board.BoardMarkers
             Both = KingSide | QueenSide,
         }
 
-        public const string DefaultFEN = "r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQkq - 0 1";
+        public const string DefaultFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
         MoveAudio _moveAudio;
 
@@ -39,6 +39,8 @@ namespace Board.BoardMarkers
         Piece[,] _pieces = new Piece[8, 8];
         King BlackKing;
         King WhiteKing;
+
+        Pawn EnPassantPawn;
 
         public Piece[,] Pieces => _pieces;
 
@@ -165,7 +167,7 @@ namespace Board.BoardMarkers
             Piece piece = _pieces[fromX, fromY];
             if (piece == null)
             {
-                Debug.LogError("attempted to null piece to square.");
+                Debug.LogError("attempted to move null piece to square.");
                 return;
             }
 
@@ -181,6 +183,26 @@ namespace Board.BoardMarkers
             {
                 GameObject.Destroy(targetSquare.gameObject);
             }
+
+            if (moveType == MoveType.Enpassant)
+            {
+                moveTook = true;
+                _pieces[(int)EnPassantPawn.CurrentFile, (int)EnPassantPawn.CurrentRank] = null;
+                GameObject.Destroy(EnPassantPawn.gameObject);
+            }
+
+            if (EnPassantPawn != null)
+            {
+                EnPassantPawn.CanEnPassant = false;
+                EnPassantPawn = null;
+            }
+
+            if (piece is Pawn pawn && Mathf.Abs(toY - fromY) == 2)
+            {
+                EnPassantPawn = pawn;
+                EnPassantPawn.CanEnPassant = true;
+            }
+
 
             piece.CurrentFile = (Piece.File)toX;
             piece.CurrentRank = (Piece.Rank)toY;
