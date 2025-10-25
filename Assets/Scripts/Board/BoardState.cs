@@ -1,13 +1,11 @@
 using Board.Pieces;
 using Board.Pieces.Moves;
-using System;
-using System.Collections;
 using UnityEngine;
 using System.Collections.Generic;
 using Board.Audio;
-using TMPro.EditorUtilities;
+using Board.History;
 
-namespace Board.BoardMarkers
+namespace Board
 {
     public class BoardState
     {
@@ -37,10 +35,12 @@ namespace Board.BoardMarkers
         public CastlingRights BlackCastlingRights { get; private set; }
 
         Piece[,] _pieces = new Piece[8, 8];
-        King BlackKing;
-        King WhiteKing;
+        King _blackKing;
+        King _whiteKing;
 
-        Pawn EnPassantPawn;
+        Pawn _enPassantPawn;
+
+        BoardHistory _boardHistory = new BoardHistory();
 
         public Piece[,] Pieces => _pieces;
 
@@ -75,8 +75,15 @@ namespace Board.BoardMarkers
             return _pieces[file, rank];
         }
 
+        public void Restart()
+        {
+            SetFEN(_boardHistory.StartingFen);
+        }
+
         public void SetFEN(string fen)
         {
+            _boardHistory.StartingFen = fen;
+
             string[] split = fen.Split(new[] { ' ' }, 2);
             string boardFen = split.Length > 1 ? split[0] : fen;
             string gameStateFen = split.Length > 1 ? split[1] : "";
@@ -105,11 +112,11 @@ namespace Board.BoardMarkers
                         {
                             if (king.IsWhite)
                             {
-                                WhiteKing = king;
+                                _whiteKing = king;
                             }
                             else
                             {
-                                BlackKing = king;
+                                _blackKing = king;
                             }
                         }
                     }
@@ -136,25 +143,25 @@ namespace Board.BoardMarkers
                 {
                     _currentMove = Move.Black;
                 }
-                else if (c == 'K' && _pieces[7, 0] is Rook && _pieces[7, 0].IsWhite && WhiteKing?.CurrentRank == Piece.Rank.One && WhiteKing?.CurrentFile == Piece.File.E)
+                else if (c == 'K' && _pieces[7, 0] is Rook && _pieces[7, 0].IsWhite && _whiteKing?.CurrentRank == Piece.Rank.One && _whiteKing?.CurrentFile == Piece.File.E)
                 {
                     WhiteCastlingRights |= CastlingRights.KingSide;
                 }
-                else if (c == 'Q' && _pieces[0, 0] is Rook && _pieces[0, 0].IsWhite && WhiteKing?.CurrentRank == Piece.Rank.One && WhiteKing?.CurrentFile == Piece.File.E)
+                else if (c == 'Q' && _pieces[0, 0] is Rook && _pieces[0, 0].IsWhite && _whiteKing?.CurrentRank == Piece.Rank.One && _whiteKing?.CurrentFile == Piece.File.E)
                 {
                     WhiteCastlingRights |= CastlingRights.QueenSide;
                 }
-                else if (c == 'k' && _pieces[7, 7] is Rook && !_pieces[7, 7].IsWhite && BlackKing?.CurrentRank == Piece.Rank.Eight && BlackKing?.CurrentFile == Piece.File.E)
+                else if (c == 'k' && _pieces[7, 7] is Rook && !_pieces[7, 7].IsWhite && _blackKing?.CurrentRank == Piece.Rank.Eight && _blackKing?.CurrentFile == Piece.File.E)
                 {
                     BlackCastlingRights |= CastlingRights.KingSide;
                 }
-                else if (c == 'q' && _pieces[0, 7] is Rook && !_pieces[0, 7].IsWhite && BlackKing?.CurrentRank == Piece.Rank.Eight && BlackKing?.CurrentFile == Piece.File.E)
+                else if (c == 'q' && _pieces[0, 7] is Rook && !_pieces[0, 7].IsWhite && _blackKing?.CurrentRank == Piece.Rank.Eight && _blackKing?.CurrentFile == Piece.File.E)
                 {
                     BlackCastlingRights |= CastlingRights.QueenSide;
                 }
             }
 
-            if (BlackKing == null || WhiteKing == null)
+            if (_blackKing == null || _whiteKing == null)
             {
                 Debug.LogError("invalid position, missing king.");
             }
@@ -187,20 +194,20 @@ namespace Board.BoardMarkers
             if (moveType == MoveType.Enpassant)
             {
                 moveTook = true;
-                _pieces[(int)EnPassantPawn.CurrentFile, (int)EnPassantPawn.CurrentRank] = null;
-                GameObject.Destroy(EnPassantPawn.gameObject);
+                _pieces[(int)_enPassantPawn.CurrentFile, (int)_enPassantPawn.CurrentRank] = null;
+                GameObject.Destroy(_enPassantPawn.gameObject);
             }
 
-            if (EnPassantPawn != null)
+            if (_enPassantPawn != null)
             {
-                EnPassantPawn.CanEnPassant = false;
-                EnPassantPawn = null;
+                _enPassantPawn.CanEnPassant = false;
+                _enPassantPawn = null;
             }
 
             if (piece is Pawn pawn && Mathf.Abs(toY - fromY) == 2)
             {
-                EnPassantPawn = pawn;
-                EnPassantPawn.CanEnPassant = true;
+                _enPassantPawn = pawn;
+                _enPassantPawn.CanEnPassant = true;
             }
 
 
@@ -252,7 +259,7 @@ namespace Board.BoardMarkers
             }
 
             _currentMove = _currentMove == Move.White ? Move.Black : Move.White;
-            if ((_currentMove == Move.White && WhiteKing.IsAttacked(Pieces)) || (_currentMove == Move.Black && BlackKing.IsAttacked(Pieces)))
+            if ((_currentMove == Move.White && _whiteKing.IsAttacked(Pieces)) || (_currentMove == Move.Black && _blackKing.IsAttacked(Pieces)))
             {
                 _moveAudio.Play(MoveAudio.Clips.Check);
             }
@@ -332,7 +339,7 @@ namespace Board.BoardMarkers
 
             if (piece is King king)
             {
-                if ((_currentMove == Move.White && WhiteKing.IsAttacked(Pieces, toX, toY)) || (_currentMove == Move.Black && BlackKing.IsAttacked(Pieces, toX, toY)))
+                if ((_currentMove == Move.White && _whiteKing.IsAttacked(Pieces, toX, toY)) || (_currentMove == Move.Black && _whiteKing.IsAttacked(Pieces, toX, toY)))
                 {
                     _pieces[fromX, fromY] = piece;
                     _pieces[toX, toY] = targetSquare;
@@ -341,7 +348,7 @@ namespace Board.BoardMarkers
             }
             else
             {
-                if ((_currentMove == Move.White && WhiteKing.IsAttacked(Pieces)) || (_currentMove == Move.Black && BlackKing.IsAttacked(Pieces)))
+                if ((_currentMove == Move.White && _blackKing.IsAttacked(Pieces)) || (_currentMove == Move.Black && _blackKing.IsAttacked(Pieces)))
                 {
                     _pieces[fromX, fromY] = piece;
                     _pieces[toX, toY] = targetSquare;

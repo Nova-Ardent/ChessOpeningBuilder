@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Board.Pieces
 {
-    public class Piece : MonoBehaviour
+    public abstract class Piece : MonoBehaviour
     {
         public enum File : int
         {
@@ -32,6 +32,16 @@ namespace Board.Pieces
             Six,
             Seven,
             Eight
+        }
+
+        public enum PieceTypes
+        {
+            Pawn,
+            Knight,
+            Bishop,
+            Rook,
+            Queen,
+            King
         }
 
         [SerializeField] RectTransform Transform;
@@ -64,6 +74,8 @@ namespace Board.Pieces
                 UpdatePosition();
             }
         }
+
+        public abstract PieceTypes Type { get; }
 
         private void Awake()
         {

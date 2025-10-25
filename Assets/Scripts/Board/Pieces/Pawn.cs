@@ -10,6 +10,9 @@ namespace Board.Pieces
     {
         public bool CanEnPassant = false;
 
+        public override PieceTypes Type => PieceTypes.Pawn;
+
+
         public override IEnumerable<MoveData> GetMoves(BoardState boardState)
         {
             if (IsWhite)

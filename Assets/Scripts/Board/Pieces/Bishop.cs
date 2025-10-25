@@ -16,6 +16,8 @@ namespace Board.Pieces
             new Vector2Int(-1, 1),
         };
 
+        public override PieceTypes Type => PieceTypes.Bishop;
+
         public override IEnumerable<MoveData> GetMoves(BoardState boardState)
         {
             foreach (var direction in MoveDirections)

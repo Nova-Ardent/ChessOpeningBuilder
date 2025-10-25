@@ -8,6 +8,9 @@ namespace Board.Pieces
 {
     public class Knight : Piece
     {
+        public override PieceTypes Type => PieceTypes.Knight;
+
+
         public static readonly Vector2[] MoveDirections = new Vector2[]
         {
             new Vector2(1, 2),
