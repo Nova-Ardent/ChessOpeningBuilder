@@ -19,10 +19,20 @@ namespace Board.History
             public float dy;
         }
 
+        public struct MoveView
+        {
+            public int Index;
+            public bool IsWhite;
+        }
+
         public MovePositionData movePositionData;
+
+        MoveView _latestMove = new MoveView() { Index = 0, IsWhite = true };
+        MoveView _viewingMove = new MoveView() { Index = 0, IsWhite = true };
 
         List<MoveLabelPair> _moveLabels = new List<MoveLabelPair>();
         List<MovePair> _moves = new List<MovePair>();
+        public BoardState _boardState;
 
         public MoveIndexLabel moveIndexLabelPrefab;
         public MoveLabel moveLabelPrefab;
@@ -33,6 +43,22 @@ namespace Board.History
         private void Awake()
         {
             AddMovePair();
+        }
+
+        public void SetBoardState(BoardState boardState)
+        {
+            _boardState = boardState;
+        }
+
+        public void GoToMove(int index, bool isWhite)
+        {
+            _viewingMove = new MoveView() { Index = index, IsWhite = isWhite  };
+
+            if (_boardState == null)
+            {
+                Debug.LogError("BoardState is not set in BoardHistory.");
+            }
+            _boardState.SetFEN(isWhite ? _moves[index].White.resultingFen : _moves[index].Black.resultingFen);
         }
 
         public void AddMove(Move move)
@@ -49,12 +75,19 @@ namespace Board.History
             {
                 _moves.Last().Black = move;
                 _moveLabels.Last().Black = moveLabel;
+
+                int moveCount = _moves.Count;
+                moveLabel.SetCallback(() => GoToMove(moveCount - 1, false));
+                
                 AddMovePair();
             }
             else
             {
                 _moves.Last().White = move;
                 _moveLabels.Last().White = moveLabel;
+
+                int moveCount = _moves.Count;
+                moveLabel.SetCallback(() => GoToMove(moveCount - 1, true));
             }
         }
 

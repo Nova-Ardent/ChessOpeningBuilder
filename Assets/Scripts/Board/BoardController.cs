@@ -53,7 +53,7 @@ namespace Board.BoardMarkers
             }
 
             _boardState = new BoardState(boardHistory, moveAudio, pieceContainer, piecePrefabs);
-            _boardState.SetFEN(BoardState.DefaultFEN);
+            _boardState.SetStartingFEN(BoardState.DefaultFEN);
         }
 
         public void OnPointerDown(PointerEventData eventData)

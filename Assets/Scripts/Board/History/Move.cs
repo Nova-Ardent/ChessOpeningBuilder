@@ -10,6 +10,7 @@ namespace Board.History
         public bool IsCheck;
         public bool IsCastle;
         public bool IsWhite;
+        public PieceTypes? Promotion;
 
         public PieceTypes PieceType;
         
@@ -21,6 +22,8 @@ namespace Board.History
 
         public File? FileDisambiguation;
         public Rank? RankDisambiguation;
+
+        public string resultingFen;
 
         public override string ToString()
         {
@@ -37,15 +40,6 @@ namespace Board.History
             }
 
             string notation = "";
-            if (FileDisambiguation.HasValue)
-            {
-                notation += FileDisambiguation.Value.ToString().ToLower();
-            }
-            
-            if (RankDisambiguation.HasValue)
-            {
-                notation += ((int)RankDisambiguation.Value + 1).ToString();
-            }
 
             switch (PieceType)
             {
@@ -53,10 +47,6 @@ namespace Board.History
                     if (IsCapture)
                     {
                         notation += FromFile.ToString().ToLower();
-                    }
-                    else
-                    {
-                        notation += IsWhite ? "" : "";
                     }
                     break;
                 case PieceTypes.Knight:
@@ -76,12 +66,40 @@ namespace Board.History
                     break;
             }
 
+            if (FileDisambiguation.HasValue)
+            {
+                notation += FileDisambiguation.Value.ToString().ToLower();
+            }
+
+            if (RankDisambiguation.HasValue)
+            {
+                notation += ((int)RankDisambiguation.Value + 1).ToString();
+            }
+
             if (IsCapture)
             {
                 notation += "x";
             }
 
             notation += $"{ToFile.ToString().ToLower()}{(int)ToRank + 1}";
+
+            switch (Promotion)
+            {
+                case PieceTypes.Knight:
+                    notation += "=N";
+                    break;
+                case PieceTypes.Bishop:
+                    notation += "=B";
+                    break;
+                case PieceTypes.Rook:
+                    notation += "=R";
+                    break;
+                case PieceTypes.Queen:
+                    notation += "=Q";
+                    break;
+                default:
+                    break;
+            }
 
             if (IsCheck)
             {

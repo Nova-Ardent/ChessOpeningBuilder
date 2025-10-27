@@ -25,7 +25,8 @@ namespace Board
             Both = KingSide | QueenSide,
         }
 
-        public const string DefaultFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+       //public const string DefaultFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        public const string DefaultFEN = "4k3/4p3/8/8/8/8/3P4/4K3 w KQkq - 0 1";
 
         MoveAudio _moveAudio;
 
@@ -52,6 +53,7 @@ namespace Board
             _piecesPrefabs = piecePrefabs;
             _moveAudio = moveAudio;
             _boardHistory = boardHistory;
+            _boardHistory._boardState = this;
         }
 
         public Piece GetPieceInfo(out IEnumerable<MoveData> moveData, int file, int rank)
@@ -83,9 +85,15 @@ namespace Board
             SetFEN(_boardHistory.StartingFen);
         }
 
-        public void SetFEN(string fen)
+        public void SetStartingFEN(string fen)
         {
             _boardHistory.StartingFen = fen;
+            SetFEN(fen);
+        }
+
+        public void SetFEN(string fen)
+        {
+            ClearBoard();
 
             string[] split = fen.Split(new[] { ' ' }, 2);
             string boardFen = split.Length > 1 ? split[0] : fen;
@@ -164,13 +172,140 @@ namespace Board
                 }
             }
 
+            for (int i = 0; i < gameStateFen.Length - 1; i++)
+            {
+                if (char.IsLetter(gameStateFen[i]) && char.IsNumber(gameStateFen[i + 1]))
+                {
+                    char enPassantfile = char.ToLower(gameStateFen[i]);
+                    char enPassantrank = gameStateFen[i + 1];
+
+                    if (CurrentMove == Move.White)
+                    {
+                        enPassantrank--;
+                    }
+                    else
+                    {
+                        enPassantrank++;
+                    }
+
+
+                    Piece piece = _pieces[enPassantfile - 'a', enPassantrank - '1'];
+                    if (piece != null && piece is Pawn pawn)
+                    {
+                        pawn.CanEnPassant = true;
+                        _enPassantPawn = pawn;
+                    }
+                    else
+                    {
+                        Debug.LogError($"invalid enpassant piece in FEN position {enPassantfile}{enPassantrank}");
+                    }
+                }
+            }
+
             if (_blackKing == null || _whiteKing == null)
             {
                 Debug.LogError("invalid position, missing king.");
             }
         }
 
-        public void MovePiece(int fromX, int fromY, int toX, int toY, MoveType moveType, Piece.PieceTypes? promotion = null)
+        public string GetFen()
+        {
+            string fen = "";
+            for (int rank = 7; rank >= 0; rank--)
+            {
+                int skip = 0;
+                for (int file = 0; file < 8; file++)
+                {
+                    Piece piece = _pieces[file, rank];
+                    if (piece != null)
+                    {
+                        if (skip > 0)
+                        {
+                            fen += skip.ToString();
+                            skip = 0;
+                        }
+
+                        switch (piece.Type)
+                        {
+                            case PieceTypes.Pawn:
+                                fen += piece.IsWhite ? 'P' : 'p';
+                                break;
+                            case PieceTypes.Rook:
+                                fen += piece.IsWhite ? 'R' : 'r';
+                                break;
+                            case PieceTypes.Knight:
+                                fen += piece.IsWhite ? 'N' : 'n';
+                                break;
+                            case PieceTypes.Bishop:
+                                fen += piece.IsWhite ? 'B' : 'b';
+                                break;
+                            case PieceTypes.Queen:
+                                fen += piece.IsWhite ? 'Q' : 'q';
+                                break;
+                            case PieceTypes.King:
+                                fen += piece.IsWhite ? 'K' : 'k';
+                                break;
+
+                        }
+                    }
+                    else
+                    {
+                        skip++;
+                    }
+                }
+
+                if (skip > 0)
+                {
+                    fen += skip.ToString();
+                    skip = 0;
+                }
+
+                if (rank > 0)
+                {
+                    fen += '/';
+                }
+            }
+
+            fen += ' ';
+            fen += CurrentMove == Move.White ? 'w' : 'b';
+            fen += ' ';
+
+
+            if (WhiteCastlingRights.HasFlag(CastlingRights.KingSide))
+                fen += 'K';
+            if (WhiteCastlingRights.HasFlag(CastlingRights.QueenSide))
+                fen += 'Q';
+            if (BlackCastlingRights.HasFlag(CastlingRights.KingSide))
+                fen += 'k';
+            if (BlackCastlingRights.HasFlag(CastlingRights.QueenSide))
+                fen += 'q';
+
+            if (_enPassantPawn != null)
+            {
+                fen += " " + (char)(_enPassantPawn.CurrentFile + 'a');
+                if (_enPassantPawn.IsWhite)
+                {
+                    fen += (int)(_enPassantPawn.CurrentRank);
+                }
+                else
+                {
+                    fen += (int)(_enPassantPawn.CurrentRank + 2);
+                }
+            }
+            else
+            {
+                fen += " -";
+            }
+
+            return fen;
+        }
+
+        public void MovePiece(string notation, bool playNoises = true)
+        {
+            
+        }
+
+        public void MovePiece(int fromX, int fromY, int toX, int toY, MoveType moveType, Piece.PieceTypes? promotion = null, bool playNoises = true)
         {
             bool moveTook = false;
 
@@ -218,7 +353,10 @@ namespace Board
             }
 
             ChangeCurrentMove();
-            PlayMoveAudio(moveType, moveTook, promotion != null);
+            if (playNoises)
+            {
+                PlayMoveAudio(moveType, moveTook, promotion != null);
+            }
             UpdateCastling(piece, fromX, fromY);
             AddMoveToHistory
                 ( piece.Type
@@ -229,14 +367,15 @@ namespace Board
                 , moveTook
                 , (CurrentMove == Move.White && _whiteKing.IsAttacked(Pieces)) || (CurrentMove == Move.Black && _blackKing.IsAttacked(Pieces))
                 , moveType == MoveType.Castle
+                , promotion
                 , piece.IsWhite
                 );
         }
 
         void Enpassant()
         {
-            _pieces[(int)_enPassantPawn.CurrentFile, (int)_enPassantPawn.CurrentRank] = null;
             GameObject.Destroy(_enPassantPawn.gameObject);
+            _pieces[(int)_enPassantPawn.CurrentFile, (int)_enPassantPawn.CurrentRank] = null;
         }
 
         void UpdateEnpassantPawn(Piece movedPiece, int fromY, int toY)
@@ -404,7 +543,7 @@ namespace Board
             }
         }
 
-        void AddMoveToHistory(PieceTypes pieceType, File fileFrom, Rank rankfrom, File fileTo, Rank rankTo, bool isCapture, bool isCheck, bool isCastle, bool isWhite)
+        void AddMoveToHistory(PieceTypes pieceType, File fileFrom, Rank rankfrom, File fileTo, Rank rankTo, bool isCapture, bool isCheck, bool isCastle, PieceTypes? promotion, bool isWhite)
         {
             History.Move move = new History.Move();
             move.IsCapture = isCapture;
@@ -412,12 +551,16 @@ namespace Board
             move.IsCastle = isCastle;
             move.IsWhite = isWhite;
             move.PieceType = pieceType;
+            move.Promotion = promotion;
 
             move.FromFile = fileFrom;
             move.FromRank = rankfrom;
 
             move.ToFile = fileTo;
             move.ToRank = rankTo;
+
+            move.resultingFen = GetFen();
+            Debug.Log(move.resultingFen);
 
             Piece piece = _pieces[(int)fileTo, (int)rankTo];
             if (piece == null)
@@ -509,6 +652,28 @@ namespace Board
             _pieces[fromX, fromY] = piece;
             _pieces[toX, toY] = targetSquare;
             return true;
+        }
+
+        void ClearBoard()
+        {
+            _blackKing = null;
+            _whiteKing = null;
+
+            BlackCastlingRights = CastlingRights.None;
+            WhiteCastlingRights = CastlingRights.None;
+            CurrentMove = Move.White;
+
+            for (int i = 0; i < 8; i++)
+            {
+                for (int j = 0; j < 8; j++)
+                {
+                    if (_pieces[i, j] != null)
+                    {
+                        GameObject.Destroy(_pieces[i, j].gameObject);
+                        _pieces[i, j] = null;
+                    }
+                }
+            }
         }
     }
 }
