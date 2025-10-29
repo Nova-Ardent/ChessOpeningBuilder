@@ -42,6 +42,8 @@ namespace Board.BoardMarkers
         Piece _highlightedPiece;
         IEnumerable<MoveData> _highlightedPieceMoves;
 
+        Piece _pieceBeingAnimation;
+
         void Start()
         {
             if (this.gameObject.transform is RectTransform rectTransform)
@@ -57,6 +59,14 @@ namespace Board.BoardMarkers
             _boardState.SetStartingFEN(BoardState.DefaultFEN);
 
             boardHistory.SetBoardController(this);
+        }
+
+        void Update()
+        {
+            if (_pieceBeingAnimation != null && _pieceBeingAnimation.UpdateAnimation())
+            {
+                _pieceBeingAnimation = null;
+            }
         }
 
         public void OnPointerDown(PointerEventData eventData)
@@ -171,6 +181,12 @@ namespace Board.BoardMarkers
 
         void MovePiece(MoveData moveData)
         {
+            if (_pieceBeingAnimation != null)
+            {
+                _pieceBeingAnimation.ForceFinishAnimation();
+                _pieceBeingAnimation = null;
+            }
+
             if (moveData.IsPromotion)
             {
                 highlighting.ClearAll();
@@ -246,6 +262,15 @@ namespace Board.BoardMarkers
             highlighting.SetLastMove(new Vector2Int(x1, y1), new Vector2Int(x2, y2));
             highlighting.ClearAll();
             arrows.ClearAll();
+        }
+
+        public void AnimatePieceMove(int pieceFile, int pieceRank, int fromFile, int fromRank, int toFile, int toRank, MoveAudio.Clips audio)
+        {
+            _pieceBeingAnimation = _boardState.Pieces[pieceFile, pieceRank];
+            _pieceBeingAnimation.StartAnimation(fromFile, fromRank, toFile, toRank, () => 
+            {
+                moveAudio.Play(audio);
+            });
         }
     }
 }

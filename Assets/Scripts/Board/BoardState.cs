@@ -6,6 +6,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using static Board.Pieces.Piece;
 using System.Linq;
+using System.Net.NetworkInformation;
+using Board.BoardMarkers.Promotion;
+using System;
 
 namespace Board
 {
@@ -299,12 +302,197 @@ namespace Board
             return fen;
         }
 
-        public void MovePiece(string notation, bool playNoises = true)
+        public void MovePiece(string notation, bool isWhite, bool playNoises = true, bool addToHistory = true)
         {
-            
+            try
+            {
+                bool isCheck = false;
+                if (notation.Last() == '+')
+                {
+                    notation = notation.Remove(notation.Length - 1);
+                    isCheck = true;
+                }
+
+                PieceTypes? promotion = null;
+                if (notation.Contains("=Q"))
+                {
+                    promotion = PieceTypes.Queen;
+                    notation = notation.Replace("=Q", "");
+                }
+                else if (notation.Contains("=N"))
+                {
+                    promotion = PieceTypes.Knight;
+                    notation = notation.Replace("=N", "");
+                }
+                else if (notation.Contains("=R"))
+                {
+                    promotion = PieceTypes.Rook;
+                    notation = notation.Replace("=R", "");
+                }
+                else if (notation.Contains("=B"))
+                {
+                    promotion = PieceTypes.Bishop;
+                    notation = notation.Replace("=B", "");
+                }
+
+                PieceTypes pieceType;
+                switch (notation[0])
+                {
+                    case 'K': pieceType = PieceTypes.King; break;
+                    case 'Q': pieceType = PieceTypes.Queen; break;
+                    case 'R': pieceType = PieceTypes.Rook; break;
+                    case 'B': pieceType = PieceTypes.Bishop; break;
+                    case 'N': pieceType = PieceTypes.Knight; break;
+                    default: pieceType = PieceTypes.Pawn; break;
+                }
+
+                if (pieceType != PieceTypes.Pawn)
+                {
+                    notation = notation.Substring(1, notation.Length - 1);
+                }
+
+                Rank toRank = (Rank)(notation.Last() - '1');
+                notation = notation.Substring(0, notation.Length - 1);
+
+                File toFile = (File)(notation.Last() - 'a');
+                notation = notation.Substring(0, notation.Length - 1);
+
+                bool isTake = false;
+                if (notation.Contains('x'))
+                {
+                    isTake = true;
+                    notation = notation.Replace("x", "");
+                }
+
+                File? fileDisambiguation = null;
+                Rank? rankDisambiguation = null;
+                for (int i = 0; i < 2; i++)
+                {
+                    if (notation.Length > 0)
+                    {
+                        char disambiguation = notation.Last();
+                        if (char.IsDigit(disambiguation))
+                        {
+                            rankDisambiguation = (Rank)(disambiguation - '1');
+                        }
+                        else if (char.IsLetter(disambiguation))
+                        {
+                            fileDisambiguation = (File)(disambiguation - 'a');
+                        }
+                    }
+                }
+
+                List<Piece> pieces = new List<Piece>();
+                foreach (Piece piece in _pieces)
+                {
+                    if (piece != null && piece.Type == pieceType && piece.IsWhite == isWhite)
+                    {
+                        if (fileDisambiguation != null && piece.CurrentFile != fileDisambiguation)
+                        {
+                            continue;
+                        }
+
+                        if (rankDisambiguation != null && piece.CurrentRank != rankDisambiguation)
+                        {
+                            continue;
+                        }
+
+                        pieces.Add(piece);
+                    }
+                }
+
+                List<Piece> resultingPieces = new List<Piece>();
+                List<MoveData> possibleMoves = new List<MoveData>();
+                foreach (Piece piece in pieces)
+                {
+                    foreach (MoveData move in piece.GetMoves(this))
+                    {
+                        if (move.Rank == toRank && move.File == toFile)
+                        {
+                            possibleMoves.Add(move);
+                            resultingPieces.Add(piece);
+                        }
+                    }
+                }
+
+                if (resultingPieces.Count > 1)
+                {
+                    Debug.LogError("Something went wrong with move calculation, there is still piece ambiguity");
+                    return;
+                }
+                else if (resultingPieces.Count == 0)
+                {
+                    Debug.LogError("Something went wrong with the move calculation, couldn't find valid piece.");
+                    return;
+                }
+                else if (possibleMoves.Count > 1)
+                {
+                    Debug.LogError("Something went wrong with move calculation, there is still move ambiguaty");
+                    return;
+                }
+                else if (possibleMoves.Count == 0)
+                {
+                    Debug.LogError("Something went wrong with move calculation, couldn't fine move");
+                    return;
+                }
+                else
+                {
+                    Piece piece = resultingPieces.First();
+                    MoveData move = possibleMoves.First();
+                    MovePiece
+                        ( (int)piece.CurrentFile
+                        , (int)piece.CurrentRank
+                        , (int)move.File
+                        , (int)move.Rank
+                        , move.Type
+                        , promotion
+                        , playNoises
+                        , addToHistory
+                        );
+                }
+
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Failed to parse move");
+            }
+
+            /*
+            PieceTypes pieceType;
+            switch (notation[0])
+            {
+                case 'K': pieceType = PieceTypes.King; break;
+                case 'Q': pieceType = PieceTypes.Queen; break;
+                case 'R': pieceType = PieceTypes.Rook; break;
+                case 'B': pieceType = PieceTypes.Bishop; break;
+                case 'N': pieceType = PieceTypes.Knight; break;
+                default: pieceType = PieceTypes.Pawn; break;
+            }
+
+            List<Piece> pieces = new List<Piece>();
+            foreach (Piece piece in _pieces)
+            {
+                if (piece != null && piece.Type == pieceType && piece.IsWhite == isWhite)
+                {
+                    pieces.Add(piece);
+                }
+            }
+
+            if (pieceType == PieceTypes.Pawn)
+            {
+                Rank rank = (Rank)(notation.Last() - '1');
+                File file = (File)(notation[0] - 'a');
+
+                pieces = pieces.Where(x => x.GetMoves(this).Any(y => y.Rank == rank && y.File == file)).ToList();
+            }
+            else
+            {
+                
+            }
+            */
         }
 
-        public void MovePiece(int fromX, int fromY, int toX, int toY, MoveType moveType, Piece.PieceTypes? promotion = null, bool playNoises = true)
+        public void MovePiece(int fromX, int fromY, int toX, int toY, MoveType moveType, PieceTypes? promotion = null, bool playNoises = true, bool addToHistory = true)
         {
             bool moveTook = false;
 
@@ -357,18 +545,21 @@ namespace Board
                 PlayMoveAudio(moveType, moveTook, promotion != null);
             }
             UpdateCastling(piece, fromX, fromY);
-            AddMoveToHistory
-                ( piece.Type
-                , (Piece.File)fromX
-                , (Piece.Rank)fromY
-                , (Piece.File)toX
-                , (Piece.Rank)toY
-                , moveTook
-                , (CurrentMove == Move.White && _whiteKing.IsAttacked(Pieces)) || (CurrentMove == Move.Black && _blackKing.IsAttacked(Pieces))
-                , moveType == MoveType.Castle
-                , promotion
-                , piece.IsWhite
-                );
+            if (addToHistory)
+            {
+                AddMoveToHistory
+                    ( piece.Type
+                    , (Piece.File)fromX
+                    , (Piece.Rank)fromY
+                    , (Piece.File)toX
+                    , (Piece.Rank)toY
+                    , moveTook
+                    , (CurrentMove == Move.White && _whiteKing.IsAttacked(Pieces)) || (CurrentMove == Move.Black && _blackKing.IsAttacked(Pieces))
+                    , moveType == MoveType.Castle
+                    , promotion
+                    , piece.IsWhite
+                    );
+            }
         }
 
         void Enpassant()

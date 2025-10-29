@@ -1,6 +1,7 @@
 using UnityEngine;
 using Board.Pieces;
 using static Board.Pieces.Piece;
+using Board.Audio;
 
 namespace Board.History
 {
@@ -107,6 +108,31 @@ namespace Board.History
             }
 
             return notation;
+        }
+
+        public MoveAudio.Clips GetMoveAudio()
+        {
+            if (IsCheck)
+            {
+                return MoveAudio.Clips.Check;
+            }
+            
+            if (IsCastle)
+            {
+                return MoveAudio.Clips.Castle;
+            }
+
+            if (IsCapture)
+            {
+                return MoveAudio.Clips.Capture;
+            }
+
+            if (Promotion.HasValue)
+            {
+                return MoveAudio.Clips.Promotion;
+            }
+
+            return MoveAudio.Clips.Move;
         }
     }
 }

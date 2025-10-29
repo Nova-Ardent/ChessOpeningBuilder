@@ -3,6 +3,7 @@ using Board.History.Pairs;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Board.History
@@ -74,6 +75,15 @@ namespace Board.History
             {
                 return;
             }
+
+            if (_viewingMove.IsWhite)
+            {
+                GoToMove(_viewingMove.Index, false);
+            }
+            else
+            {
+                GoToMove(_viewingMove.Index + 1, true);
+            }
         }
 
         void StepOutOneMove()
@@ -81,6 +91,15 @@ namespace Board.History
             if (_viewingMove.Index == 0 && _viewingMove.IsWhite)
             {
                 return;
+            }
+
+            if (_viewingMove.IsWhite)
+            {
+                GoToMove(_viewingMove.Index - 1, false);
+            }
+            else
+            {
+                GoToMove(_viewingMove.Index, true);
             }
         }
 
@@ -96,7 +115,38 @@ namespace Board.History
 
         public void GoToMove(int index, bool isWhite)
         {
-            _viewingMove = new MoveView() { Index = index, IsWhite = isWhite  };
+            bool markForAnimation = false;
+            bool animateInReverse = false;
+            Move previousMove = null;
+
+            if (_viewingMove.IsWhite)
+            {
+                if (!isWhite && index == _viewingMove.Index)
+                {
+                    markForAnimation = true;
+                }
+                else if (!isWhite && index == _viewingMove.Index - 1)
+                {
+                    markForAnimation = true;
+                    animateInReverse = true;
+                    previousMove = _moves[index + 1].White;
+                }
+            }
+            else
+            {
+                if (isWhite && index == _viewingMove.Index + 1)
+                {
+                    markForAnimation = true;
+                }
+                else if (isWhite && index == _viewingMove.Index)
+                {
+                    markForAnimation = true;
+                    animateInReverse = true;
+                    previousMove = _moves[index].Black;
+                }
+            }
+
+            _viewingMove = new MoveView() { Index = index, IsWhite = isWhite };
 
             if (_boardState == null)
             {
@@ -106,7 +156,43 @@ namespace Board.History
             Move move = isWhite ? _moves[index].White : _moves[index].Black;
 
             _boardController.ViewingOldMove((int)move.FromFile, (int)move.FromRank, (int)move.ToFile, (int)move.ToRank);
-            _boardState.SetFEN(move.resultingFen);
+            
+            if (markForAnimation && !animateInReverse)
+            {
+                _boardState.MovePiece(move.ToString(), move.IsWhite, false, false);
+            }
+            else
+            {
+                _boardState.SetFEN(move.resultingFen);
+            }
+
+            if (markForAnimation)
+            {
+                if (animateInReverse)
+                {
+                    _boardController.AnimatePieceMove
+                        ( (int)previousMove.FromFile
+                        , (int)previousMove.FromRank
+                        , (int)previousMove.ToFile
+                        , (int)previousMove.ToRank
+                        , (int)previousMove.FromFile
+                        , (int)previousMove.FromRank
+                        , previousMove.GetMoveAudio()
+                        );
+                }
+                else
+                {
+                    _boardController.AnimatePieceMove
+                        ( (int)move.ToFile
+                        , (int)move.ToRank
+                        , (int)move.FromFile
+                        , (int)move.FromRank
+                        , (int)move.ToFile
+                        , (int)move.ToRank
+                        , move.GetMoveAudio()
+                        );
+                }
+            }
         }
 
         public void AddMove(Move move)

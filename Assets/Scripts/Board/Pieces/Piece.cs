@@ -50,6 +50,12 @@ namespace Board.Pieces
         [SerializeField] Rank _currentRank;
         [SerializeField] bool _isWhite;
 
+        public Vector3 AnimationFrom { get; private set; }
+        public Vector3 AnimationTo { get; private set; }
+        public float AnimationProgress { get; private set; }
+        public bool IsAnimating { get; private set; }
+        Action _onAnimationComplete;
+
         public bool IsWhite
         {
             get { return _isWhite; }
@@ -258,6 +264,47 @@ namespace Board.Pieces
         public virtual IEnumerable<Piece> GetAttackingPiecesOfType(Piece[,] pieces, int fromX, int fromY)
         {
             yield break;
+        }
+
+        public void StartAnimation(int fromFile, int fromRank, int toFile, int toRank, Action onAnimationComplete = null)
+        {
+            _onAnimationComplete = onAnimationComplete;
+
+            int fx = fromFile;
+            int fy = fromRank;
+
+            int tx = toFile;
+            int ty = toRank;
+
+            AnimationFrom = 100 * new Vector2(fx, fy) - new Vector2(350, 350);
+            AnimationTo = 100 * new Vector2(tx, ty) - new Vector2(350, 350);
+            AnimationProgress = 0f;
+            IsAnimating = true;
+            UpdateAnimation();
+        }
+
+        public void ForceFinishAnimation()
+        {
+            AnimationProgress = 1f;
+            UpdateAnimation();
+        }
+
+        public bool UpdateAnimation()
+        {
+            AnimationProgress += Time.deltaTime / 0.1f;
+            if (AnimationProgress >= 1f)
+            {
+                AnimationProgress = 1f;
+                IsAnimating = false;
+                UpdatePosition();
+
+                _onAnimationComplete?.Invoke();
+            }
+            else
+            {
+                Transform.localPosition = Vector3.Lerp(AnimationFrom, AnimationTo, AnimationProgress);
+            }
+            return !IsAnimating;
         }
     }
 }
