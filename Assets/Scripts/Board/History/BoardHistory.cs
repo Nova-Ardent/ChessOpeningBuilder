@@ -40,11 +40,12 @@ namespace Board.History
 
         public MovePositionData movePositionData;
 
-        MoveView _latestMove = new MoveView() { Index = 0, IsWhite = true };
-        MoveView _viewingMove = new MoveView() { Index = 0, IsWhite = true };
+        MoveView _latestMove = new MoveView() { Index = -1, IsWhite = true };
+        MoveView _viewingMove = new MoveView() { Index = -1, IsWhite = true };
 
         List<MoveLabelPair> _moveLabels = new List<MoveLabelPair>();
         List<MovePair> _moves = new List<MovePair>();
+        public AutoTrainer AutoTrainer;
         public BoardState _boardState;
         public BoardController _boardController;
         public Trainer _trainer;
@@ -62,6 +63,9 @@ namespace Board.History
 
         private void Update()
         {
+            if (AutoTrainer.IsRunning && !AutoTrainer.IsUsersTurn)
+                return;
+
             if (FileBrowser.IsOpen)
                 return;
 
@@ -92,20 +96,40 @@ namespace Board.History
             }
         }
 
-        void StepOutOneMove()
+        void StepOutOneMove(bool undoingMove = false)
         {
+            if (_viewingMove.Index == -1)
+            {
+                return;
+            }
+
             if (_viewingMove.Index == 0 && _viewingMove.IsWhite)
             {
+                _viewingMove.Index = -1;
+                _viewingMove.IsWhite = false;
+
+                Move move = _moves[_latestMove.Index].White;
+                _boardState.SetFEN(StartingFen);
+                _boardController.AnimatePieceMove
+                    ( (int)move.FromFile
+                    , (int)move.FromRank
+                    , (int)move.ToFile
+                    , (int)move.ToRank
+                    , (int)move.FromFile
+                    , (int)move.FromRank
+                    , move.GetMoveAudio()
+                    );
+
                 return;
             }
 
             if (_viewingMove.IsWhite)
             {
-                GoToMove(_viewingMove.Index - 1, false);
+                GoToMove(_viewingMove.Index - 1, false, undoingMove);
             }
             else
             {
-                GoToMove(_viewingMove.Index, true);
+                GoToMove(_viewingMove.Index, true, undoingMove);
             }
         }
 
@@ -114,8 +138,11 @@ namespace Board.History
             _boardState = boardState;
         }
 
-        public void GoToMove(int index, bool isWhite)
+        public void GoToMove(int index, bool isWhite, bool undoingMove = false)
         {
+            if (AutoTrainer.IsRunning && !AutoTrainer.IsUsersTurn && !undoingMove)
+                return;
+
             bool markForAnimation = false;
             bool animateInReverse = false;
             Move previousMove = null;
@@ -200,11 +227,13 @@ namespace Board.History
         {
             MoveLabel moveLabel = Instantiate<MoveLabel>(moveLabelPrefab, MoveListObject.transform);
             moveLabel.SetMove(move);
-            moveLabel.transform.localPosition = new Vector3
-                ( movePositionData.x + movePositionData.dx * (move.IsWhite ? 0 : 1)
-                , movePositionData.y - movePositionData.dy * _moveLabels.Count
-                , 0
-                );
+            if (moveLabel.transform is RectTransform rt)
+            {
+                rt.anchoredPosition = new Vector2
+                    ( movePositionData.x + movePositionData.dx * (move.IsWhite ? 0 : 1)
+                    , movePositionData.y - movePositionData.dy * _moveLabels.Count
+                    );
+            }
 
             if (!move.IsWhite)
             {
@@ -238,11 +267,14 @@ namespace Board.History
 
             MoveIndexLabel indexLabel = Instantiate<MoveIndexLabel>(moveIndexLabelPrefab, MoveListObject.transform);
             indexLabel.SetMove(_moves.Count);
-            indexLabel.transform.localPosition = new Vector3
-                ( movePositionData.indexX
-                , movePositionData.y - movePositionData.dy * _moveLabels.Count
-                , 0
-                );
+
+            if (indexLabel.transform is RectTransform rt)
+            {
+                rt.anchoredPosition = new Vector2
+                    ( movePositionData.indexX
+                    , movePositionData.y - movePositionData.dy * _moveLabels.Count
+                    );
+            }
             _moveLabels.Last().Index = indexLabel;
         }
 
@@ -264,8 +296,8 @@ namespace Board.History
 
             _moveLabels.Clear();
 
-            _latestMove = new MoveView() { Index = 0, IsWhite = true };
-            _viewingMove = new MoveView() { Index = 0, IsWhite = true };
+            _latestMove = new MoveView() { Index = -1, IsWhite = true };
+            _viewingMove = new MoveView() { Index = -1, IsWhite = true };
             
             _boardState.SetFEN(StartingFen);
             _boardController.ClearAllHighlights();
@@ -273,9 +305,81 @@ namespace Board.History
             AddMovePair();
         }
 
+        public void RemoveLastMove()
+        {
+            if (FileBrowser.IsOpen)
+                return;
+
+            if (_latestMove.IsWhite && _latestMove.Index == 0)
+            {
+                GameObject.Destroy(_moveLabels[_latestMove.Index].White.gameObject);
+                Move move = _moves[_latestMove.Index].White;
+                _moves[_latestMove.Index].White = null;
+                _boardState.SetFEN(StartingFen);
+
+                _boardController.AnimatePieceMove
+                    ( (int)move.FromFile
+                    , (int)move.FromRank
+                    , (int)move.ToFile
+                    , (int)move.ToRank
+                    , (int)move.FromFile
+                    , (int)move.FromRank
+                    , move.GetMoveAudio()
+                    );
+
+                return;
+            }
+
+            GoToMove(_latestMove.Index, _latestMove.IsWhite, true);
+            StepOutOneMove(true);
+
+            if (_latestMove.IsWhite)
+            {
+                GameObject.Destroy(_moveLabels[_latestMove.Index].White.gameObject);
+                _moves[_latestMove.Index].White = null;
+            }
+            else
+            {
+                GameObject.Destroy(_moveLabels[_latestMove.Index].Black.gameObject);
+                _moves[_latestMove.Index].Black = null;
+
+                MoveLabelPair moveLabel = _moveLabels.Last();
+                GameObject.Destroy(moveLabel.Index.gameObject);
+
+                _moveLabels = _moveLabels.Take(_moveLabels.Count - 1).ToList();
+                _moves = _moves.Take(_moves.Count - 1).ToList();
+            }
+
+            _latestMove = _viewingMove;
+        }
+
         public void AddVariationToTrainer()
         {
             _trainer.AddVariation(GetMoves().Select(x => (x.ToString(), x.resultingFen)));
+        }
+
+        public Move GetLatestMove()
+        {
+            if (_latestMove.IsWhite)
+            {
+                return _moves[_latestMove.Index].White;
+            }
+            else
+            {
+                return _moves[_latestMove.Index].Black;
+            }
+        }
+
+        public MoveLabel GetLatestMoveLabel()
+        {
+            if (_latestMove.IsWhite)
+            {
+                return _moveLabels[_latestMove.Index].White;
+            }
+            else
+            {
+                return _moveLabels[_latestMove.Index].Black;
+            }
         }
 
         public IEnumerable<Move> GetMoves()

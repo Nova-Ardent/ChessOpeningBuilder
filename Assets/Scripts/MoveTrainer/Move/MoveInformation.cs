@@ -1,18 +1,80 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 namespace MoveTrainer.Move
-{
+{    
     public class MoveInformation
     {
         public MoveInformation ParentMove;
         public List<MoveInformation> PossibleNextMoves = new List<MoveInformation>();
         public string Fen;
         public string MoveNotation;
+        public int TimesGuessed = 0;
+        public int TimesCorrect = 0;
 
         public override string ToString()
         {
             return MoveNotation;
+        }
+
+        public IEnumerable<string> Serialize(int depth)
+        {
+            depth++;
+            yield return new string('\t', depth) + "-FEN: " + Fen;
+            yield return new string('\t', depth) + " Move: " + MoveNotation;
+            yield return new string('\t', depth) + " Count: " + PossibleNextMoves.Count;
+
+            foreach (var nextMove in PossibleNextMoves)
+            {
+                foreach (var line in nextMove.Serialize(depth))
+                {
+                    yield return line;
+                }
+            }
+        }
+
+        public void Deserialize(IEnumerator<string> contents)
+        {
+            contents.MoveNext();
+            string fenline = contents.Current.Trim();
+            if (fenline.StartsWith("-FEN: "))
+            {
+                Fen = fenline.Split(new string[] { "-FEN:" }, StringSplitOptions.None)[1].Trim();
+            }
+            else
+            {
+                throw new Exception("Invalid format: Expected FEN line.");
+            }
+
+            contents.MoveNext();
+            string moveline = contents.Current.Trim();
+            if (moveline.StartsWith("Move: "))
+            {
+                MoveNotation = moveline.Split(new string[] { "Move:" }, StringSplitOptions.None)[1].Trim();
+            }
+            else
+            {
+                throw new Exception("Invalid format: Expected Move line.");
+            }
+
+            contents.MoveNext();
+            string countline = contents.Current.Trim();
+            if (countline.StartsWith("Count: "))
+            {
+                int count = int.Parse(countline.Split(new string[] { "Count:" }, StringSplitOptions.None)[1].Trim());
+                for (int i = 0; i < count; i++)
+                {
+                    MoveInformation nextMove = new MoveInformation();
+                    nextMove.ParentMove = this;
+                    nextMove.Deserialize(contents);
+                    PossibleNextMoves.Add(nextMove);
+                }
+            }
+            else
+            {
+                throw new Exception("Invalid format: Expected Count line.");
+            }
         }
     }
 }

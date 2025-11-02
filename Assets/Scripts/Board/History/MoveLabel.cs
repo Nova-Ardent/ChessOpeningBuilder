@@ -2,11 +2,15 @@ using SimpleFileBrowser;
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Board.History
 {
     public class MoveLabel : MonoBehaviour
     {
+        [SerializeField] Color failedColor;
+        [SerializeField] RawImage backGround;
+
         Action _callback;
         public TextMeshProUGUI label;
 
@@ -26,6 +30,11 @@ namespace Board.History
                 return;
 
             _callback();
+        }
+
+        public void SetColorToFailed()
+        {
+            backGround.color = failedColor;
         }
     }
 }

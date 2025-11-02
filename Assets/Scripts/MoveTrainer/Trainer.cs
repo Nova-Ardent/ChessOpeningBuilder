@@ -1,15 +1,22 @@
-using UnityEngine;
-using MoveTrainer.Move;
 using Board;
-using System.Collections.Generic;
-using System.Linq;
+using MoveTrainer.Move;
 using SimpleFileBrowser;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using TMPro;
+using Unity.VisualScripting;
+using UnityEngine;
 
 namespace MoveTrainer
 {
     public class Trainer : MonoBehaviour
     {
+        public AutoTrainer AutoTrainer;
+
         public MoveInformationDisplay MoveInformationDisplayPrefab;
+        public TMP_Dropdown TypeDropDown;
+        public TMP_InputField DepthInputField;
 
         public GameObject PreviousMoveContainer;
         public GameObject CurrentMoveContainer;
@@ -38,7 +45,7 @@ namespace MoveTrainer
         {
             GameObject.Destroy(PreviousMoveDisplay?.gameObject);
             GameObject.Destroy(CurrentMoveDisplay?.gameObject);
-            foreach (var nextMoveDisplay in NextMovesDisplay ?? Enumerable.Empty<MoveInformationDisplay>())
+            foreach (var nextMoveDisplay in NextMovesDisplay)
             {
                 GameObject.Destroy(nextMoveDisplay.gameObject);
             }
@@ -49,6 +56,7 @@ namespace MoveTrainer
             if (CurrentMove.ParentMove != null)
             {
                 PreviousMoveDisplay = MakeMoveDisplay(CurrentMove.ParentMove, PreviousMoveContainer.transform);
+                PreviousMoveDisplay.name = "PreviousMoveDisplay";
                 PreviousMoveDisplay.SetCallBack(x =>
                 {
                     CurrentMove = x;
@@ -57,10 +65,12 @@ namespace MoveTrainer
             }
 
             CurrentMoveDisplay = MakeMoveDisplay(CurrentMove, CurrentMoveContainer.transform);
+            CurrentMoveDisplay.name = "CurrentMoveDisplay";
             for (int i = 0; i < CurrentMove.PossibleNextMoves.Count; i++)
             {
                 var nextMove = CurrentMove.PossibleNextMoves[i];
                 var nextMoveDisplay = MakeMoveDisplay(nextMove, NextMoveContainer.transform);
+                nextMoveDisplay.name = "NextMoveDisplay_" + i;
                 NextMovesDisplay.Add(nextMoveDisplay);
 
                 nextMoveDisplay.SetCallBack(x =>
@@ -69,7 +79,7 @@ namespace MoveTrainer
                     UpdateViewedMove();
                 });
                 nextMoveDisplay.transform.localPosition = new Vector3
-                    (0
+                    ( 0
                     , ((MoveInformationDisplayPrefab.transform as RectTransform).rect.height + 5) * (0.5f + i - CurrentMove.PossibleNextMoves.Count / 2f)
                     , 0
                     );
@@ -78,10 +88,14 @@ namespace MoveTrainer
 
         MoveInformationDisplay MakeMoveDisplay(MoveInformation moveInformation, Transform parent)
         {
-            CurrentMoveDisplay = Instantiate(MoveInformationDisplayPrefab, parent);
-            CurrentMoveDisplay.Init(moveInformation);
-            CurrentMoveDisplay.transform.localPosition = Vector3.zero;
-            return CurrentMoveDisplay;
+            var nextMove = Instantiate(MoveInformationDisplayPrefab, parent);
+            nextMove.Init(moveInformation);
+            nextMove.transform.localPosition = Vector3.zero;
+            if (moveInformation.TimesGuessed > 0)
+            {
+                nextMove.PercentageBar.Percentage = 1.0f * moveInformation.TimesCorrect / moveInformation.TimesGuessed;
+            }
+            return nextMove;
         }
 
         public void AddVariation(IEnumerable<(string move, string fen)> moveInfo)
@@ -129,8 +143,13 @@ namespace MoveTrainer
             FileBrowser.AddQuickLink("Users", "C:\\Users", null);
             FileBrowser.ShowSaveDialog((paths) =>
             {
-                Debug.Log($"Selected: {paths[0]}");
-                Debug.Log(TrainerData.Serialize(TrainerData));
+                using (StreamWriter writer = new StreamWriter(paths[0], false))
+                {
+                    foreach (var line in TrainerData.Serialize(TrainerData))
+                    {
+                        writer.WriteLine(line);
+                    }
+                }
             }
             , () =>
             {
@@ -150,7 +169,13 @@ namespace MoveTrainer
             FileBrowser.AddQuickLink("Users", "C:\\Users", null);
             FileBrowser.ShowLoadDialog((paths) =>
             {
-                Debug.Log($"Selected: {paths[0]}");
+                using (StreamReader reader = new StreamReader(paths[0]))
+                {
+                    TrainerData = TrainerData.Deserialize(ReadStreamer(reader).GetEnumerator());
+                    CurrentMove = TrainerData.StartingMove;
+                }
+
+                UpdateViewedMove();
             }
             , () =>
             {
@@ -158,6 +183,42 @@ namespace MoveTrainer
             }
             , FileBrowser.PickMode.Files
             , false, "C:\\Users", "MyOpening");
+        }
+
+        public void Run()
+        {
+            AutoTrainer.Run(TrainerData);
+        }
+
+        public void OnOpeningTypeChanged()
+        {
+            TrainerData.IsWhiteTrainer = TypeDropDown.value == 0;
+        }
+
+        public void OnDepthChanged()
+        {
+            if (int.TryParse(DepthInputField.text, out int value))
+            {
+                TrainerData.Depth = value;
+                if (value <= 0)
+                {
+                    DepthInputField.text = "";
+                    TrainerData.Depth = -1;
+                }
+            }
+            else
+            {
+                DepthInputField.text = "";
+                TrainerData.Depth = -1;
+            }
+        }
+
+        IEnumerable<string> ReadStreamer(StreamReader reader)
+        {
+            while (!reader.EndOfStream)
+            {
+                yield return reader.ReadLine();
+            }
         }
     }
 }

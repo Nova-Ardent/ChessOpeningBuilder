@@ -5,13 +5,13 @@ using Board.History;
 using Board.MouseClickData;
 using Board.Pieces;
 using Board.Pieces.Moves;
+using MoveTrainer;
 using SimpleFileBrowser;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.Overlays;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Rendering.Universal;
 using static Board.BoardMarkers.Highlighting;
 
 namespace Board.BoardMarkers
@@ -31,12 +31,13 @@ namespace Board.BoardMarkers
         public GameObject piecesContainer;
         public MoveAudio moveAudio;
         public PromotionModule promotionModule;
+        public AutoTrainer autoTrainer;
 
         public BoardHistory boardHistory;
 
         public RectTransform pieceContainer;
 
-        BoardState _boardState;
+        public BoardState BoardState { get; private set; }
         RectTransform _transform;
         bool _isRotated;
 
@@ -45,7 +46,7 @@ namespace Board.BoardMarkers
 
         Piece _pieceBeingAnimation;
 
-        [SerializeField] bool OpeningIsWhite = true;
+        Action _onPieceMoved;
 
         void Start()
         {
@@ -58,8 +59,8 @@ namespace Board.BoardMarkers
                 Debug.LogError("This GameObject needs to be a RectTransform for ParentClamp to work.");
             }
 
-            _boardState = new BoardState(boardHistory, moveAudio, pieceContainer, piecePrefabs);
-            _boardState.SetStartingFEN(BoardState.DefaultFEN);
+            BoardState = new BoardState(boardHistory, moveAudio, pieceContainer, piecePrefabs);
+            BoardState.SetStartingFEN(BoardState.DefaultFEN);
         }
 
         void Update()
@@ -72,6 +73,9 @@ namespace Board.BoardMarkers
 
         public void OnPointerDown(PointerEventData eventData)
         {
+            if (autoTrainer.IsRunning && !autoTrainer.IsUsersTurn)
+                return;
+
             if (FileBrowser.IsOpen)
                 return;
 
@@ -105,7 +109,7 @@ namespace Board.BoardMarkers
                 {
                     moveDisplayManager.ClearMarkers();
 
-                    _highlightedPiece = _boardState.GetPieceInfo(out _highlightedPieceMoves, leftClickData.FromPosition.x, leftClickData.FromPosition.y);
+                    _highlightedPiece = BoardState.GetPieceInfo(out _highlightedPieceMoves, leftClickData.FromPosition.x, leftClickData.FromPosition.y);
                     if (_highlightedPiece != null)
                     {
                         moveDisplayManager.SpawnMoves(_highlightedPieceMoves);
@@ -117,6 +121,9 @@ namespace Board.BoardMarkers
 
         public void OnPointerUp(PointerEventData eventData)
         {
+            if (autoTrainer.IsRunning && !autoTrainer.IsUsersTurn)
+                return;
+
             if (FileBrowser.IsOpen)
                 return;
 
@@ -169,6 +176,9 @@ namespace Board.BoardMarkers
 
         public void OnPointerExit(PointerEventData eventData)
         {
+            if (autoTrainer.IsRunning && !autoTrainer.IsUsersTurn)
+                return;
+
             if (FileBrowser.IsOpen)
                 return;
 
@@ -180,6 +190,9 @@ namespace Board.BoardMarkers
 
         public void OnPointerMove(PointerEventData eventData)
         {
+            if (autoTrainer.IsRunning && !autoTrainer.IsUsersTurn)
+                return;
+
             if (FileBrowser.IsOpen)
                 return;
 
@@ -212,11 +225,12 @@ namespace Board.BoardMarkers
                         );
                     highlighting.ClearAll();
 
-                    _boardState.MovePiece((int)_highlightedPiece.CurrentFile, (int)_highlightedPiece.CurrentRank, (int)moveData.File, (int)moveData.Rank, moveData.Type, piece);
+                    BoardState.MovePiece((int)_highlightedPiece.CurrentFile, (int)_highlightedPiece.CurrentRank, (int)moveData.File, (int)moveData.Rank, moveData.Type, piece);
                     _highlightedPiece = null;
                     _highlightedPieceMoves = null;
 
                     moveDisplayManager.ClearMarkers();
+                    _onPieceMoved?.Invoke();
                 }
                 , () => {
                     _highlightedPiece.UpdatePosition();
@@ -230,11 +244,12 @@ namespace Board.BoardMarkers
                         );
                 highlighting.ClearAll();
 
-                _boardState.MovePiece((int)_highlightedPiece.CurrentFile, (int)_highlightedPiece.CurrentRank, (int)moveData.File, (int)moveData.Rank, moveData.Type);
+                BoardState.MovePiece((int)_highlightedPiece.CurrentFile, (int)_highlightedPiece.CurrentRank, (int)moveData.File, (int)moveData.Rank, moveData.Type);
                 _highlightedPiece = null;
                 _highlightedPieceMoves = null;
 
                 moveDisplayManager.ClearMarkers();
+                _onPieceMoved?.Invoke();
             }
         }
 
@@ -257,7 +272,7 @@ namespace Board.BoardMarkers
             ranks.UpdateRotation(_isRotated);
             files.UpdateRotation(_isRotated);
 
-            foreach (var piece in _boardState.Pieces)
+            foreach (var piece in BoardState.Pieces)
             {
                 if (piece != null)
                     piece.UpdateRotation(_isRotated);
@@ -279,7 +294,7 @@ namespace Board.BoardMarkers
 
         public void AnimatePieceMove(int pieceFile, int pieceRank, int fromFile, int fromRank, int toFile, int toRank, MoveAudio.Clips audio)
         {
-            _pieceBeingAnimation = _boardState.Pieces[pieceFile, pieceRank];
+            _pieceBeingAnimation = BoardState.Pieces[pieceFile, pieceRank];
             _pieceBeingAnimation.StartAnimation(fromFile, fromRank, toFile, toRank, () => 
             {
                 moveAudio.Play(audio);
@@ -291,6 +306,11 @@ namespace Board.BoardMarkers
             highlighting.ClearLastMove();
             highlighting.ClearAll();
             arrows.ClearAll();
+        }
+
+        public void SetMovePieceCallback(Action movePieceCallback)
+        {
+            _onPieceMoved = movePieceCallback;
         }
     }
 }
