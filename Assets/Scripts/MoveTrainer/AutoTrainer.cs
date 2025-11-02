@@ -6,6 +6,7 @@ using UnityEngine;
 using static Board.BoardState;
 using System.Collections;
 using System.Linq;
+using TMPro;
 
 namespace MoveTrainer
 {
@@ -21,6 +22,8 @@ namespace MoveTrainer
         public BoardController boardController;
         public BoardHistory boardHistory;
         public GameObject nextVariationButton;
+        public TextMeshProUGUI textMeshProUGUI;
+
 
         public GameObject[] DisableOnRun;
         public GameObject[] EnableOnRun;
@@ -38,6 +41,9 @@ namespace MoveTrainer
             get => boardController.BoardState.CurrentMove == Board.BoardState.Move.White && TrainerData.IsWhiteTrainer
                 || boardController.BoardState.CurrentMove == Board.BoardState.Move.Black && !TrainerData.IsWhiteTrainer;
         }
+
+        public int TotalVariationCount { get; private set; }
+        public int CurrentVariationIndex { get; private set; }
 
         private void Start()
         {
@@ -59,6 +65,9 @@ namespace MoveTrainer
             BuildVariations(trainerData, trainerData.StartingMove, 0);
             if (Variations.Count == 0)
                 return;
+
+            TotalVariationCount = Variations.Count;
+            CurrentVariationIndex = 0;
 
 
             foreach (var obj in DisableOnRun)
@@ -108,6 +117,7 @@ namespace MoveTrainer
             Variations.Clear();
 
             nextVariationButton.SetActive(false);
+            textMeshProUGUI.gameObject.SetActive(false);
         }
 
         public void SetNextVariation()
@@ -127,6 +137,10 @@ namespace MoveTrainer
             CurrentMove = 1;
 
             nextVariationButton.SetActive(false);
+            
+            CurrentVariationIndex++;
+            textMeshProUGUI.text = $"Variation {CurrentVariationIndex} / {TotalVariationCount}";
+            textMeshProUGUI.gameObject.SetActive(true);
         }
 
         void BuildVariations(TrainerData trainerData, MoveInformation currentMove, int depth)

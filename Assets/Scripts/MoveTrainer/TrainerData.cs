@@ -19,7 +19,7 @@ namespace MoveTrainer
             ByBranch
         }
 
-        public const int Version = 1;
+        public const int Version = 2;
 
         public bool IsWhiteTrainer = true;
         public int Depth = -1;

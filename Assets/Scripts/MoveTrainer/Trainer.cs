@@ -237,6 +237,7 @@ namespace MoveTrainer
                     TypeDropDown.value = TrainerData.IsWhiteTrainer ? 0 : 1;
                     DepthInputField.text = TrainerData.Depth.ToString();
                     DepthTypeDropDown.value = (int)TrainerData.DepthType;
+                    StatsTypeDropDown.value = (int)TrainerData.StatsDisplay;
                 }
 
                 UpdateViewedMove();
