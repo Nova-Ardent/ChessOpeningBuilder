@@ -9,6 +9,8 @@ namespace MoveTrainer.Move
         public MoveInformation ParentMove;
         public List<MoveInformation> PossibleNextMoves = new List<MoveInformation>();
         public string MoveNotation;
+        public string HintOne;
+        public string HintTwo;
         public int TimesGuessed = 0;
         public int TimesCorrect = 0;
 
@@ -21,6 +23,8 @@ namespace MoveTrainer.Move
         {
             depth++;
             yield return new string('\t', depth) + "-: ";
+            yield return new string('\t', depth) + " hint1: " + HintOne;
+            yield return new string('\t', depth) + " hint2: " + HintTwo;
             yield return new string('\t', depth) + " Move: " + MoveNotation;
             yield return new string('\t', depth) + " Count: " + PossibleNextMoves.Count;
 
@@ -38,6 +42,19 @@ namespace MoveTrainer.Move
             contents.MoveNext();
             string firstline = contents.Current.Trim();
 
+            contents.MoveNext();
+            string hint1Line = contents.Current.Trim();
+            if (hint1Line.StartsWith("hint1: "))
+            {
+                HintOne = hint1Line.Split(new string[] { "hint1:" }, StringSplitOptions.None)[1].Trim();
+            }
+
+            contents.MoveNext();
+            string hint2Line = contents.Current.Trim();
+            if (hint2Line.StartsWith("hint2: "))
+            {
+                HintTwo = hint2Line.Split(new string[] { "hint2:" }, StringSplitOptions.None)[1].Trim();
+            }
 
             contents.MoveNext();
             string moveline = contents.Current.Trim();

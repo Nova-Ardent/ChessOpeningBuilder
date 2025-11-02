@@ -355,7 +355,12 @@ namespace Board.History
 
         public void AddVariationToTrainer()
         {
-            _trainer.AddVariation(GetMoves().Select(x => (x.ToString(), x.resultingFen)));
+            _trainer.AddVariation(GetMoves()
+                .Select(x => 
+                    ( x.ToString()
+                    , $"{x.FromFile}{((int)x.FromRank) + 1}"
+                    , $"{x.ToFile}{((int)x.ToRank) + 1}"
+                    )));
         }
 
         public Move GetLatestMove()

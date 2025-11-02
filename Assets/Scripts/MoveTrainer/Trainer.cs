@@ -130,7 +130,7 @@ namespace MoveTrainer
             return nextMove;
         }
 
-        public void AddVariation(IEnumerable<(string move, string fen)> moveInfo)
+        public void AddVariation(IEnumerable<(string move, string hint1, string hint2)> moveInfo)
         {
             if (TrainerData.StartingMove == null)
             {
@@ -140,7 +140,7 @@ namespace MoveTrainer
             bool brokenChain = false;
             MoveInformation currentMove = TrainerData.StartingMove;
 
-            foreach (var (move, fen) in moveInfo)
+            foreach (var (move, hint1, hint2) in moveInfo)
             {
                 if (!brokenChain && currentMove.PossibleNextMoves.Any(x => x.MoveNotation == move))
                 {
@@ -154,6 +154,8 @@ namespace MoveTrainer
                     {
                         ParentMove = currentMove,
                         MoveNotation = move,
+                        HintOne = hint1,
+                        HintTwo = hint2,
                     };
 
                     currentMove.PossibleNextMoves.Add(newMoveInformation);
@@ -251,6 +253,14 @@ namespace MoveTrainer
         public void OnDepthTypeChanged()
         {
             TrainerData.DepthType = (TrainerType)DepthTypeDropDown.value;
+        }
+
+        public void DeleteCurrentMoveAndChildren()
+        {
+            var move = CurrentMove;
+            CurrentMove = CurrentMove.ParentMove;
+            CurrentMove.PossibleNextMoves.Remove(move);
+            UpdateViewedMove();
         }
 
         IEnumerable<string> ReadStreamer(StreamReader reader)

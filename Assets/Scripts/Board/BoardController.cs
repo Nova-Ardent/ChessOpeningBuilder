@@ -42,8 +42,8 @@ namespace Board.BoardMarkers
         RectTransform _transform;
         bool _isRotated;
 
-        Piece _highlightedPiece;
-        IEnumerable<MoveData> _highlightedPieceMoves;
+        public Piece HighlightedPiece;
+        public IEnumerable<MoveData> HighlightedPieceMoves;
 
         Piece _pieceBeingAnimation;
 
@@ -102,18 +102,18 @@ namespace Board.BoardMarkers
                 leftClickData.FromPosition = ToLocalPosition(eventData.pressPosition);
                 leftClickData.IsMouseDown = true;
 
-                if (_highlightedPieceMoves != null && _highlightedPieceMoves.Any(x => (int)x.File == leftClickData.FromPosition.x && (int)x.Rank == leftClickData.FromPosition.y))
+                if (HighlightedPieceMoves != null && HighlightedPieceMoves.Any(x => (int)x.File == leftClickData.FromPosition.x && (int)x.Rank == leftClickData.FromPosition.y))
                 {
-                    MovePiece(_highlightedPieceMoves.First(x => (int)x.File == leftClickData.FromPosition.x && (int)x.Rank == leftClickData.FromPosition.y));
+                    MovePiece(HighlightedPieceMoves.First(x => (int)x.File == leftClickData.FromPosition.x && (int)x.Rank == leftClickData.FromPosition.y));
                 }
                 else
                 {
                     moveDisplayManager.ClearMarkers();
 
-                    _highlightedPiece = BoardState.GetPieceInfo(out _highlightedPieceMoves, leftClickData.FromPosition.x, leftClickData.FromPosition.y);
-                    if (_highlightedPiece != null)
+                    HighlightedPiece = BoardState.GetPieceInfo(out HighlightedPieceMoves, leftClickData.FromPosition.x, leftClickData.FromPosition.y);
+                    if (HighlightedPiece != null)
                     {
-                        moveDisplayManager.SpawnMoves(_highlightedPieceMoves);
+                        moveDisplayManager.SpawnMoves(HighlightedPieceMoves);
                         highlighting.Highlight(leftClickData.FromPosition.x, leftClickData.FromPosition.y, false);
                     }
                 }
@@ -159,15 +159,15 @@ namespace Board.BoardMarkers
 
                 leftClickData.ToPosition = ToLocalPosition(eventData.position);
 
-                if (_highlightedPiece != null && leftClickData.IsMouseDown)
+                if (HighlightedPiece != null && leftClickData.IsMouseDown)
                 {
-                    if (_highlightedPieceMoves != null && _highlightedPieceMoves.Any(x => (int)x.File == leftClickData.ToPosition.x && (int)x.Rank == leftClickData.ToPosition.y))
+                    if (HighlightedPieceMoves != null && HighlightedPieceMoves.Any(x => (int)x.File == leftClickData.ToPosition.x && (int)x.Rank == leftClickData.ToPosition.y))
                     {
-                        MovePiece(_highlightedPieceMoves.First(x => (int)x.File == leftClickData.ToPosition.x && (int)x.Rank == leftClickData.ToPosition.y));
+                        MovePiece(HighlightedPieceMoves.First(x => (int)x.File == leftClickData.ToPosition.x && (int)x.Rank == leftClickData.ToPosition.y));
                     }
                     else
                     {
-                        _highlightedPiece.UpdatePosition();
+                        HighlightedPiece.UpdatePosition();
                     }
                 }
 
@@ -186,7 +186,7 @@ namespace Board.BoardMarkers
             rightClickData.IsMouseDown = false;
             leftClickData.IsMouseDown = false;
 
-            _highlightedPiece?.UpdatePosition();
+            HighlightedPiece?.UpdatePosition();
         }
 
         public void OnPointerMove(PointerEventData eventData)
@@ -200,9 +200,9 @@ namespace Board.BoardMarkers
             if (promotionModule.IsActive)
                 return;
 
-            if (_highlightedPiece != null && leftClickData.IsMouseDown)
+            if (HighlightedPiece != null && leftClickData.IsMouseDown)
             {
-                _highlightedPiece.transform.localPosition = pieceContainer.transform.InverseTransformPoint(eventData.position);
+                HighlightedPiece.transform.localPosition = pieceContainer.transform.InverseTransformPoint(eventData.position);
             }
         }
 
@@ -218,36 +218,36 @@ namespace Board.BoardMarkers
             {
                 highlighting.ClearAll();
 
-                promotionModule.Spawn(_highlightedPiece.IsWhite, moveData.File, moveData.Rank
+                promotionModule.Spawn(HighlightedPiece.IsWhite, moveData.File, moveData.Rank
                 , (piece) => {
                     highlighting.SetLastMove
-                        ( new Vector2Int((int)_highlightedPiece.CurrentFile, (int)_highlightedPiece.CurrentRank)
+                        ( new Vector2Int((int)HighlightedPiece.CurrentFile, (int)HighlightedPiece.CurrentRank)
                         , new Vector2Int((int)moveData.File, (int)moveData.Rank)
                         );
                     highlighting.ClearAll();
 
-                    BoardState.MovePiece((int)_highlightedPiece.CurrentFile, (int)_highlightedPiece.CurrentRank, (int)moveData.File, (int)moveData.Rank, moveData.Type, piece);
-                    _highlightedPiece = null;
-                    _highlightedPieceMoves = null;
+                    BoardState.MovePiece((int)HighlightedPiece.CurrentFile, (int)HighlightedPiece.CurrentRank, (int)moveData.File, (int)moveData.Rank, moveData.Type, piece);
+                    HighlightedPiece = null;
+                    HighlightedPieceMoves = null;
 
                     moveDisplayManager.ClearMarkers();
                     _onPieceMoved?.Invoke();
                 }
                 , () => {
-                    _highlightedPiece.UpdatePosition();
+                    HighlightedPiece.UpdatePosition();
                 });
             }
             else
             {
                 highlighting.SetLastMove
-                        ( new Vector2Int((int)_highlightedPiece.CurrentFile, (int)_highlightedPiece.CurrentRank)
+                        ( new Vector2Int((int)HighlightedPiece.CurrentFile, (int)HighlightedPiece.CurrentRank)
                         , new Vector2Int((int)moveData.File, (int)moveData.Rank)
                         );
                 highlighting.ClearAll();
 
-                BoardState.MovePiece((int)_highlightedPiece.CurrentFile, (int)_highlightedPiece.CurrentRank, (int)moveData.File, (int)moveData.Rank, moveData.Type);
-                _highlightedPiece = null;
-                _highlightedPieceMoves = null;
+                BoardState.MovePiece((int)HighlightedPiece.CurrentFile, (int)HighlightedPiece.CurrentRank, (int)moveData.File, (int)moveData.Rank, moveData.Type);
+                HighlightedPiece = null;
+                HighlightedPieceMoves = null;
 
                 moveDisplayManager.ClearMarkers();
                 _onPieceMoved?.Invoke();
@@ -290,8 +290,8 @@ namespace Board.BoardMarkers
             if (promotionModule.IsActive)
                 promotionModule.CancelPressed();
 
-            _highlightedPiece = null;
-            _highlightedPieceMoves = null;
+            HighlightedPiece = null;
+            HighlightedPieceMoves = null;
 
             highlighting.SetLastMove(new Vector2Int(x1, y1), new Vector2Int(x2, y2));
             highlighting.ClearAll();

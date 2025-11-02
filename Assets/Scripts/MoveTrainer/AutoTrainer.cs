@@ -15,6 +15,7 @@ namespace MoveTrainer
         {
             public List<MoveInformation> Moves;
             public List<bool> IsMoveCorrect;
+            public List<bool> HintUsed;
         }
 
         public BoardController boardController;
@@ -100,6 +101,7 @@ namespace MoveTrainer
 
             TrainerData = null;
             IsRunning = false;
+
             boardHistory.ClearHistory();
             CurrentVariation = null;
             CurrentMove = 1;
@@ -111,6 +113,12 @@ namespace MoveTrainer
         public void SetNextVariation()
         {
             boardHistory.ClearHistory();
+            boardController.ClearAllHighlights();
+            boardController.moveDisplayManager.ClearMarkers();
+            boardController.rightClickData = new Board.MouseClickData.MouseData();
+            boardController.leftClickData = new Board.MouseClickData.MouseData();
+            boardController.HighlightedPiece = null;
+            boardController.HighlightedPieceMoves = null;
 
             int next = Random.Range(0, Variations.Count);
             CurrentVariation = Variations[next];
@@ -165,7 +173,8 @@ namespace MoveTrainer
             return new Variation()
             {
                 Moves = moves,
-                IsMoveCorrect = new List<bool>(moves.Select(x => true))
+                IsMoveCorrect = new List<bool>(moves.Select(x => true)),
+                HintUsed = new List<bool>(moves.Select(x => false)),
             };
         }
 
@@ -260,6 +269,45 @@ namespace MoveTrainer
             else
             {
                 nextVariationButton.SetActive(true);
+            }
+        }
+
+        public void GetHint()
+        {
+            if (!IsRunning)
+            {
+                return;
+            }
+
+            CurrentVariation.IsMoveCorrect[CurrentMove] = false;
+
+            if (!CurrentVariation.HintUsed[CurrentMove])
+            {
+                CurrentVariation.HintUsed[CurrentMove] = true;
+
+                string hint = CurrentVariation.Moves[CurrentMove].HintOne;
+                int file = hint[0] - 'A';
+                int rank = hint[1] - '1';
+
+                boardController.highlighting.Highlight(file, rank, true);
+                CurrentVariation.Moves[CurrentMove].TimesGuessed++;
+            }
+            else
+            {
+                string hint1 = CurrentVariation.Moves[CurrentMove].HintOne;
+                int file1 = hint1[0] - 'A';
+                int rank1 = hint1[1] - '1';
+
+                string hint2 = CurrentVariation.Moves[CurrentMove].HintTwo;
+                int file2 = hint2[0] - 'A';
+                int rank2 = hint2[1] - '1';
+
+                boardController.highlighting.Highlight(file1, rank1, true);
+                boardController.arrows.UpdateArrow(new Board.MouseClickData.MouseData()
+                {
+                    FromPosition = new Vector2Int(file1, rank1),
+                    ToPosition = new Vector2Int(file2, rank2),
+                });
             }
         }
     }

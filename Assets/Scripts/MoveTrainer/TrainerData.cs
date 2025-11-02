@@ -13,6 +13,8 @@ namespace MoveTrainer
             BreadthFirst
         }
 
+        public const int Version = 1;
+
         public bool IsWhiteTrainer = true;
         public int Depth = -1;
         public TrainerType DepthType = TrainerType.DepthFirst;
@@ -20,6 +22,7 @@ namespace MoveTrainer
 
         public IEnumerable<string> Serialize(TrainerData trainerData)
         {
+            yield return TrainerData.Version.ToString();
             yield return (trainerData.IsWhiteTrainer ? "W" : "B");
             yield return trainerData.Depth.ToString();
             yield return trainerData.DepthType.ToString();
@@ -33,6 +36,11 @@ namespace MoveTrainer
         public static TrainerData Deserialize(IEnumerator<string> contents)
         {
             TrainerData trainerData = new TrainerData();
+
+            contents.MoveNext();
+            Debug.Log(contents.Current);
+            int version = int.Parse(contents.Current.Trim());
+
             contents.MoveNext();
             Debug.Log(contents.Current);
             trainerData.IsWhiteTrainer = contents.Current == "W";
