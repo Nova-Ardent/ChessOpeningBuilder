@@ -23,6 +23,7 @@ namespace MoveTrainer
         public TMP_Dropdown TypeDropDown;
         public TMP_InputField DepthInputField;
         public TMP_Dropdown DepthTypeDropDown;
+        public TMP_Dropdown StatsTypeDropDown;
 
         public GameObject PreviousMoveContainer;
         public GameObject CurrentMoveContainer;
@@ -123,11 +124,37 @@ namespace MoveTrainer
             var nextMove = Instantiate(MoveInformationDisplayPrefab, parent);
             nextMove.Init(moveInformation);
             nextMove.transform.localPosition = Vector3.zero;
-            if (moveInformation.TimesGuessed > 0)
+
+            if (TrainerData.StatsDisplay == StatsView.ByMove)
             {
-                nextMove.PercentageBar.Percentage = 1.0f * moveInformation.TimesCorrect / moveInformation.TimesGuessed;
+                if (moveInformation.TimesGuessed > 0)
+                {
+                    nextMove.PercentageBar.Percentage = 1.0f * moveInformation.TimesCorrect / moveInformation.TimesGuessed;
+                }
+            }
+            else
+            {
+                int timesGuessed = 0;
+                int timesCorrect = 0;
+                GetStatsOfBranch(ref timesGuessed, ref timesCorrect, moveInformation);
+
+                if (timesGuessed > 0)
+                {
+                    nextMove.PercentageBar.Percentage = 1.0f * timesCorrect / timesGuessed;
+                }
             }
             return nextMove;
+        }
+
+        void GetStatsOfBranch(ref int guessed, ref int correct, MoveInformation moveInformation)
+        {
+            guessed += moveInformation.TimesGuessed;
+            correct += moveInformation.TimesCorrect;
+
+            foreach (var move in moveInformation.PossibleNextMoves)
+            {
+                GetStatsOfBranch(ref guessed, ref correct, move);
+            }
         }
 
         public void AddVariation(IEnumerable<(string move, string hint1, string hint2)> moveInfo)
@@ -260,6 +287,12 @@ namespace MoveTrainer
             var move = CurrentMove;
             CurrentMove = CurrentMove.ParentMove;
             CurrentMove.PossibleNextMoves.Remove(move);
+            UpdateViewedMove();
+        }
+
+        public void StatsTypeChanged()
+        {
+            TrainerData.StatsDisplay = (StatsView)StatsTypeDropDown.value;
             UpdateViewedMove();
         }
 
