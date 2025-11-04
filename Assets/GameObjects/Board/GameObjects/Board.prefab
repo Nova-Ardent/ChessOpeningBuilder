@@ -855,9 +855,9 @@ RectTransform:
   - {fileID: 5918891151362287501}
   - {fileID: 473581423290472248}
   - {fileID: 1957742530234942650}
+  - {fileID: 1585713832253287593}
   - {fileID: 2824823633467920951}
   - {fileID: 6542764899886185493}
-  - {fileID: 1585713832253287593}
   - {fileID: 931146488962310147}
   - {fileID: 4421423253014521510}
   m_Father: {fileID: 0}
@@ -952,6 +952,8 @@ MonoBehaviour:
   piecesContainer: {fileID: 3148833570205578714}
   moveAudio: {fileID: 6348813107727871768}
   promotionModule: {fileID: 7371371399509168981}
+  autoTrainer: {fileID: 0}
+  boardHistory: {fileID: 0}
   pieceContainer: {fileID: 2824823633467920951}
 --- !u!1 &2969289612651503819
 GameObject:

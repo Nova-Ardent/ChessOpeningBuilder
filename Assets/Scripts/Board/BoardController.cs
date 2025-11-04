@@ -42,7 +42,20 @@ namespace Board.BoardMarkers
         RectTransform _transform;
         bool _isRotated;
 
-        public Piece HighlightedPiece;
+        Piece _highlightedPiece;
+        public Piece HighlightedPiece 
+        {
+            get => _highlightedPiece;
+            set
+            {
+                _highlightedPiece = value;
+
+                if (_highlightedPiece != null)
+                {
+                    _highlightedPiece.transform.SetAsLastSibling();
+                }
+            }
+        }
         public IEnumerable<MoveData> HighlightedPieceMoves;
 
         Piece _pieceBeingAnimation;
