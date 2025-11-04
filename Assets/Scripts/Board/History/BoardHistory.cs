@@ -63,7 +63,7 @@ namespace Board.History
 
         private void Update()
         {
-            if (AutoTrainer.IsRunning && !AutoTrainer.IsUsersTurn)
+            if (AutoTrainer.IsRunning && !AutoTrainer.IsUsersTurn && IsLookingAtLatestMove)
                 return;
 
             if (FileBrowser.IsOpen)
@@ -140,8 +140,14 @@ namespace Board.History
 
         public void GoToMove(int index, bool isWhite, bool undoingMove = false)
         {
-            if (AutoTrainer.IsRunning && !AutoTrainer.IsUsersTurn && !undoingMove)
+            if (AutoTrainer.IsRunning && !AutoTrainer.IsUsersTurn && !undoingMove && IsLookingAtLatestMove)
                 return;
+
+            _boardController.rightClickData.IsMouseDown = false;
+            _boardController.leftClickData.IsMouseDown = false;
+            _boardController.HighlightedPiece = null;
+            _boardController.HighlightedPieceMoves = null;
+            _boardController.moveDisplayManager.ClearMarkers();
 
             bool markForAnimation = false;
             bool animateInReverse = false;

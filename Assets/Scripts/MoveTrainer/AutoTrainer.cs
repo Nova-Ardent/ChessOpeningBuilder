@@ -89,11 +89,6 @@ namespace MoveTrainer
             IsRunning = true;
 
             SetNextVariation();
-
-            if (!trainerData.IsWhiteTrainer)
-            {
-                StartCoroutine(BotMove());
-            }
         }
 
         public void CompleteRun()
@@ -141,6 +136,11 @@ namespace MoveTrainer
             CurrentVariationIndex++;
             textMeshProUGUI.text = $"Variation {CurrentVariationIndex} / {TotalVariationCount}";
             textMeshProUGUI.gameObject.SetActive(true);
+
+            if (!TrainerData.IsWhiteTrainer)
+            {
+                StartCoroutine(BotMove());
+            }
         }
 
         void BuildVariations(TrainerData trainerData, MoveInformation currentMove, int depth)
@@ -289,6 +289,11 @@ namespace MoveTrainer
         public void GetHint()
         {
             if (!IsRunning)
+            {
+                return;
+            }
+
+            if (CurrentMove >= CurrentVariation.IsMoveCorrect.Count)
             {
                 return;
             }
