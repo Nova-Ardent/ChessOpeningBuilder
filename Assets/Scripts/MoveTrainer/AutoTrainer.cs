@@ -211,8 +211,6 @@ namespace MoveTrainer
             }
             else
             {
-                CurrentVariation.Moves[CurrentMove].TimesGuessed++;
-
                 string latestMove = boardHistory.GetLatestMove().ToString();
                 string variationMove = CurrentVariation.Moves[CurrentMove].ToString();
 
@@ -223,10 +221,14 @@ namespace MoveTrainer
                 }
                 else
                 {
-                    CurrentVariation.Moves[CurrentMove].TimesCorrect++;
+                    CurrentVariation.Moves[CurrentMove].TimesGuessed++;
                     if (!CurrentVariation.IsMoveCorrect[CurrentMove])
                     {
                         boardHistory.GetLatestMoveLabel().SetColorToFailed();
+                    }
+                    else
+                    {
+                        CurrentVariation.Moves[CurrentMove].TimesCorrect++;
                     }
 
                     CurrentMove++;
