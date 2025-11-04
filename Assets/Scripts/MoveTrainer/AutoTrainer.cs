@@ -311,7 +311,6 @@ namespace MoveTrainer
                 int rank = hint[1] - '1';
 
                 boardController.highlighting.Highlight(file, rank, true);
-                CurrentVariation.Moves[CurrentMove].TimesGuessed++;
             }
             else
             {
