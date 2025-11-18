@@ -1,7 +1,9 @@
-using Board.BoardMarkers;
-using Board.Pieces.Moves;
-using System;
+using Board.Common;
+using Board.Display.Moves;
+using Board.Pieces.Types;
+using Board.State;
 using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
 
 namespace Board.Pieces
@@ -16,73 +18,52 @@ namespace Board.Pieces
             new Vector2Int(-1, 1),
         };
 
-        public override PieceTypes Type => PieceTypes.Bishop;
 
-        public override IEnumerable<MoveData> GetMoves(BoardState boardState)
+        public const char BlackCharacter = 'b';
+        public const char WhiteCharacter = 'B';
+        public const char MoveCharacter = 'B';
+
+        public override char PieceCharacter => Color == PieceColor.White ? WhiteCharacter : BlackCharacter;
+
+        public readonly static PieceTypes PieceType = PieceTypes.Bishop;
+        public override PieceTypes Type => PieceType;
+
+        public override IEnumerable<PossibleMoveInfo> GetPossibleMoves(BoardPieces boardPieces = null, bool ignoreSpecialMoves = false)
         {
-            foreach (var direction in MoveDirections)
+            if (boardPieces == null)
             {
-                for (int i = 1; i < 8; i++)
-                {
-                    int targetFile = (int)CurrentFile + (int)direction.x * i;
-                    int targetRank = (int)CurrentRank + (int)direction.y * i;
-                    if (targetFile < 0 || targetFile > 7 || targetRank < 0 || targetRank > 7)
-                    {
-                        break;
-                    }
-
-                    if (boardState.Pieces[targetFile, targetRank] == null)
-                    {
-                        yield return new MoveData()
-                        {
-                            File = (File)targetFile,
-                            Rank = (Rank)targetRank,
-                            Type = MoveType.Move
-                        };
-                    }
-                    else if (boardState.Pieces[targetFile, targetRank].IsWhite != IsWhite)
-                    {
-                        yield return new MoveData()
-                        {
-                            File = (File)targetFile,
-                            Rank = (Rank)targetRank,
-                            Type = MoveType.Take
-                        };
-                        break;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
+                boardPieces = BoardPieces;
             }
-        }
 
-        public override IEnumerable<Piece> GetAttackingPiecesOfType(Piece[,] pieces, int fromX, int fromY)
-        {
             foreach (var direction in MoveDirections)
             {
                 for (int i = 1; i < 8; i++)
                 {
-                    int targetFile = (int)CurrentFile + (int)direction.x * i;
-                    int targetRank = (int)CurrentRank + (int)direction.y * i;
+                    int targetFile = (int)File + (int)direction.x * i;
+                    int targetRank = (int)Rank + (int)direction.y * i;
                     if (targetFile < 0 || targetFile > 7 || targetRank < 0 || targetRank > 7)
                     {
                         break;
                     }
 
-                    if (targetFile == fromX && targetRank == fromY)
+                    if (boardPieces[(Files)targetFile, (Ranks)targetRank] == null)
                     {
+                        yield return new PossibleMoveInfo()
+                        {
+                            File = (Files)targetFile,
+                            Rank = (Ranks)targetRank,
+                            IsCapture = false
+                        };
+                    }
+                    else if (boardPieces[(Files)targetFile, (Ranks)targetRank].Color != Color)
+                    {
+                        yield return new PossibleMoveInfo()
+                        {
+                            File = (Files)targetFile,
+                            Rank = (Ranks)targetRank,
+                            IsCapture = true
+                        };
                         break;
-                    }
-
-                    if (pieces[targetFile, targetRank] == null)
-                    {
-                        continue;
-                    }
-                    else if (pieces[targetFile, targetRank] is Bishop bishop && bishop.IsWhite == IsWhite)
-                    {
-                        yield return bishop;
                     }
                     else
                     {

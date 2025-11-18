@@ -1,54 +1,49 @@
-using Board.BoardMarkers;
-using Board.MouseClickData;
-using Board.Pieces.Moves;
-using System;
+using Board.Common;
+using Board.Display.Moves;
+using Board.Pieces.Types;
+using Board.State;
+using Board.State.ColorInfo;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 namespace Board.Pieces
 {
-    public abstract class Piece : BoardFlipper
+    public abstract class Piece : MonoBehaviour
     {
-        public enum File : int
+        RectTransform _transform;
+
+
+        Files _file;
+        public Files File
         {
-            A,
-            B,
-            C,
-            D,
-            E,
-            F,
-            G,
-            H
+            get => _file;
+            set
+            {   
+                _file = value;
+                UpdatePosition();
+            }
         }
 
-        public enum Rank : int
+        Ranks _rank;
+        public Ranks Rank
         {
-            One,
-            Two,
-            Three,
-            Four,
-            Five,
-            Six,
-            Seven,
-            Eight
+            get => _rank;
+            set
+            {
+                _rank = value;
+                UpdatePosition();
+            }
         }
 
-        public enum PieceTypes
-        {
-            Pawn,
-            Knight,
-            Bishop,
-            Rook,
-            Queen,
-            King
-        }
+        public abstract PieceTypes Type { get; }
+        public abstract char PieceCharacter { get; }
 
-        [SerializeField] RectTransform Transform;
+        [SerializeField] PieceColor _color;
+        public PieceColor Color { get => _color; }
 
-        [SerializeField] File _currentFile;
-        [SerializeField] Rank _currentRank;
-        [SerializeField] bool _isWhite;
+        protected BoardPieces BoardPieces { get; private set; }
 
         public Vector3 AnimationFrom { get; private set; }
         public Vector3 AnimationTo { get; private set; }
@@ -56,225 +51,69 @@ namespace Board.Pieces
         public bool IsAnimating { get; private set; }
         Action _onAnimationComplete;
 
-        public bool IsWhite
+
+        private void Awake()
         {
-            get { return _isWhite; }
+            if (transform is RectTransform rectTransform)
+            {
+                _transform = rectTransform;
+            }
+            else
+            {
+                Debug.LogError("Piece must be attached to a GameObject with a RectTransform.");
+            }
+        }
+        
+        public void RegisterBoardPiecesState(BoardPieces boardState)
+        {
+            transform.SetParent(boardState.transform, false);
+            BoardPieces = boardState;
         }
 
-        public File CurrentFile
+        public IEnumerable<PossibleMoveInfo> GetLegalMoves(BoardPieces boardPieces = null)
         {
-            get { return _currentFile; }
-            set 
+            if (boardPieces == null)
             {
-                _currentFile = value;
-                UpdatePosition();
+                boardPieces = BoardPieces;
+            }
+
+            if (boardPieces.CurrentMove != Color)
+            {
+                yield break;
+            }
+
+            foreach (var move in GetPossibleMoves(boardPieces))
+            {
+                if (boardPieces.IsMoveValid(this, move.File, move.Rank))
+                {
+                    yield return move;
+                }
             }
         }
 
-        public Rank CurrentRank
-        {
-            get { return _currentRank; }
-            set 
-            {
-                _currentRank = value;
-                UpdatePosition();
-            }
-        }
-
-        public abstract PieceTypes Type { get; }
-
-        protected override void Awake()
-        {
-            base.Awake();
-            UpdatePosition();
-        }
-
-        public virtual IEnumerable<MoveData> GetMoves(BoardState boardState)
+        public virtual IEnumerable<PossibleMoveInfo> GetPossibleMoves(BoardPieces boardPieces = null, bool ignoreSpecialMoves = false)
         {
             yield break;
         }
 
         public void UpdatePosition()
         {
-            int x = (int)_currentFile;
-            int y = (int)_currentRank;
+            int x = (int)_file;
+            int y = (int)_rank;
             Vector2 p1 = 100 * new Vector2(x, y) - new Vector2(350, 350);
 
-            Transform.localPosition = p1;
+            _transform.localPosition = p1;
         }
 
-        protected static bool IsPositionAttacked(Piece[,] pieces, bool isWhite, int file, int rank)
-        {
-            foreach (var knightDirections in Knight.MoveDirections)
-            {
-                int targetFile = (int)file + (int)knightDirections.x;
-                int targetRank = (int)rank + (int)knightDirections.y;
-                if (targetFile < 0 || targetFile > 7 || targetRank < 0 || targetRank > 7)
-                {
-                    continue;
-                }
-
-                Piece piece = pieces[targetFile, targetRank];
-                if (piece is Knight knight)
-                {
-                    if (knight.IsWhite != isWhite)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            foreach (var bishopDirection in Bishop.MoveDirections)
-            {
-                for (int i = 1; i < 8; i++)
-                {
-                    int targetFile = (int)file + (int)bishopDirection.x * i;
-                    int targetRank = (int)rank + (int)bishopDirection.y * i;
-                    if (targetFile < 0 || targetFile > 7 || targetRank < 0 || targetRank > 7)
-                    {
-                        break;
-                    }
-
-                    Piece piece = pieces[targetFile, targetRank];
-
-                    if (piece == null)
-                    {
-                        continue;
-                    }
-                    else if (piece.IsWhite == isWhite)
-                    {
-                        break;
-                    }
-                    else if (piece is Bishop || piece is Queen)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-            }
-
-            foreach (var rookDirection in Rook.MoveDirections)
-            {
-                for (int i = 1; i < 8; i++)
-                {
-                    int targetFile = (int)file + (int)rookDirection.x * i;
-                    int targetRank = (int)rank + (int)rookDirection.y * i;
-                    if (targetFile < 0 || targetFile > 7 || targetRank < 0 || targetRank > 7)
-                    {
-                        break;
-                    }
-
-                    Piece piece = pieces[targetFile, targetRank];
-
-                    if (piece == null)
-                    {
-                        continue;
-                    }
-                    else if (piece.IsWhite == isWhite)
-                    {
-                        break;
-                    }
-                    else if (piece is Rook || piece is Queen)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-            }
-
-            foreach (var kingDirection in King.MoveDirections)
-            {
-                int targetFile = (int)file + (int)kingDirection.x;
-                int targetRank = (int)rank + (int)kingDirection.y;
-                if (targetFile < 0 || targetFile > 7 || targetRank < 0 || targetRank > 7)
-                {
-                    continue;
-                }
-
-                Piece piece = pieces[targetFile, targetRank];
-                if (piece == null)
-                {
-                    continue;
-                }
-                else if (piece.IsWhite == isWhite)
-                {
-                    continue;
-                }
-                else if (piece is King)
-                {
-                    return true;
-                }
-            }
-
-            // handle pawns
-            if (isWhite)
-            {
-                int targetFile = file - 1;
-                int targetRank = rank + 1;
-                if (targetFile >= 0 && targetFile <= 7 && targetRank >= 0 && targetRank <= 7)
-                {
-                    if (pieces[targetFile, targetRank] is Pawn pawn && !pawn.IsWhite)
-                    {
-                        return true;
-                    }
-                }
-
-                targetFile = file + 1;
-                targetRank = rank + 1;
-                if (targetFile >= 0 && targetFile <= 7 && targetRank >= 0 && targetRank <= 7)
-                {
-                    if (pieces[targetFile, targetRank] is Pawn pawn && !pawn.IsWhite)
-                    {
-                        return true;
-                    }
-                }
-            }
-            else
-            {
-                int targetFile = file - 1;
-                int targetRank = rank - 1;
-                if (targetFile >= 0 && targetFile <= 7 && targetRank >= 0 && targetRank <= 7)
-                {
-                    if (pieces[targetFile, targetRank] is Pawn pawn && pawn.IsWhite)
-                    {
-                        return true;
-                    }
-                }
-
-                targetFile = file + 1;
-                targetRank = rank - 1;
-                if (targetFile >= 0 && targetFile <= 7 && targetRank >= 0 && targetRank <= 7)
-                {
-                    if (pieces[targetFile, targetRank] is Pawn pawn && pawn.IsWhite)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        public virtual IEnumerable<Piece> GetAttackingPiecesOfType(Piece[,] pieces, int fromX, int fromY)
-        {
-            yield break;
-        }
-
-        public void StartAnimation(int fromFile, int fromRank, int toFile, int toRank, Action onAnimationComplete = null)
+        public void StartAnimation(BoardPosition from, BoardPosition to, Action onAnimationComplete = null)
         {
             _onAnimationComplete = onAnimationComplete;
 
-            int fx = fromFile;
-            int fy = fromRank;
+            int fx = (int)from.File;
+            int fy = (int)from.Rank;
 
-            int tx = toFile;
-            int ty = toRank;
+            int tx = (int)to.File;
+            int ty = (int)to.Rank;
 
             AnimationFrom = 100 * new Vector2(fx, fy) - new Vector2(350, 350);
             AnimationTo = 100 * new Vector2(tx, ty) - new Vector2(350, 350);
@@ -302,7 +141,7 @@ namespace Board.Pieces
             }
             else
             {
-                Transform.localPosition = Vector3.Lerp(AnimationFrom, AnimationTo, AnimationProgress);
+                _transform.localPosition = Vector3.Lerp(AnimationFrom, AnimationTo, AnimationProgress);
             }
             return !IsAnimating;
         }

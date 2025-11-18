@@ -1,168 +1,209 @@
-using Board.BoardMarkers;
-using Board.Pieces.Moves;
-using System;
+using Board.Common;
+using Board.Display.Moves;
+using Board.Pieces.Types;
+using Board.State;
 using System.Collections.Generic;
-using UnityEngine;
+using System.ComponentModel;
 
 namespace Board.Pieces
 {
     public class Pawn : Piece
     {
-        public bool CanEnPassant = false;
+        public const char BlackCharacter = 'p';
+        public const char WhiteCharacter = 'P';
 
-        public override PieceTypes Type => PieceTypes.Pawn;
+        public override char PieceCharacter => Color == PieceColor.White ? WhiteCharacter : BlackCharacter;
 
-        public override IEnumerable<MoveData> GetMoves(BoardState boardState)
+
+        public readonly static PieceTypes PieceType = PieceTypes.Pawn;
+
+        public override PieceTypes Type => PieceType;
+        public bool CanEnPassant { get; set; } = false;
+
+        public override IEnumerable<PossibleMoveInfo> GetPossibleMoves(BoardPieces boardPieces = null, bool ignoreSpecialMoves = false)
         {
-            foreach (var move in Moves(boardState))
+            if (boardPieces == null)
             {
-                if (move.Rank == Rank.Eight || move.Rank == Rank.One)
-                {
-                    // cant modify enumerable in for iteration
-                    MoveData moveCopy = move;
-                    moveCopy.IsPromotion = true;
-                    yield return moveCopy;
-                }
-                else
-                {
-                    yield return move;
-                }
+                boardPieces = BoardPieces;
             }
-        }
 
-        IEnumerable<MoveData> Moves(BoardState boardState)
-        {
-            if (IsWhite)
+            if (Rank == Ranks._8)
             {
-                if (CurrentRank == Rank.Two)
+                yield break;
+            }
+
+            if (Color == PieceColor.White)
+            {
+                if (Rank == Ranks._2)
                 {
                     for (int i = 0; i < 2; i++)
                     {
-                        if (boardState.Pieces[(int)CurrentFile, (int)CurrentRank + i + 1] != null)
+                        if (boardPieces[File, Rank + i + 1] != null)
                         {
                             break;
                         }
 
-                        yield return new MoveData() { File = CurrentFile, Rank = CurrentRank + i + 1, Type = MoveType.Move };
+                        yield return new PossibleMoveInfo()
+                        {
+                            File = File,
+                            Rank = Rank + i + 1,
+                            IsCapture = false
+                        };
                     }
                 }
                 else
                 {
-                    if (boardState.Pieces[(int)CurrentFile, (int)CurrentRank + 1] == null)
+                    if (boardPieces[File, Rank + 1] == null)
                     {
-                        yield return new MoveData() { File = CurrentFile, Rank = CurrentRank + 1, Type = MoveType.Move };
+                        yield return new PossibleMoveInfo()
+                        {
+                            File = File,
+                            Rank = Rank + 1,
+                            IsCapture = false
+                        };
                     }
                 }
 
-                Rank diagnolRank = CurrentRank + 1;
-                if (CurrentFile != File.A)
+                Ranks diagnolRank = Rank + 1;
+                if (File != Files.A)
                 {
-                    File diagnolFileLeft = CurrentFile - 1;
-                    Piece targetPieceLeft = boardState.Pieces[(int)diagnolFileLeft, (int)diagnolRank];
+                    Files diagnolFileLeft = File - 1;
+                    Piece targetPieceLeft = boardPieces[diagnolFileLeft, diagnolRank];
 
-                    if (targetPieceLeft != null && targetPieceLeft.IsWhite != IsWhite)
+                    if (targetPieceLeft != null && targetPieceLeft.Color != Color)
                     {
-                        yield return new MoveData() { File = diagnolFileLeft, Rank = diagnolRank, Type = MoveType.Take };
+                        yield return new PossibleMoveInfo()
+                        {
+                            File = diagnolFileLeft,
+                            Rank = diagnolRank,
+                            IsCapture = true
+                        };
                     }
                 }
 
-                if (CurrentFile != File.H)
+                if (File != Files.H)
                 {
-                    File diagnolFileRight = CurrentFile + 1;
-                    Piece targetPieceRight = boardState.Pieces[(int)diagnolFileRight, (int)diagnolRank];
+                    Files diagnolFileRight = File + 1;
+                    Piece targetPieceRight = boardPieces[diagnolFileRight, diagnolRank];
 
-                    if (targetPieceRight != null && targetPieceRight.IsWhite != IsWhite)
+                    if (targetPieceRight != null && targetPieceRight.Color != Color)
                     {
-                        yield return new MoveData() { File = diagnolFileRight, Rank = diagnolRank, Type = MoveType.Take };
+                        yield return new PossibleMoveInfo()
+                        {
+                            File = diagnolFileRight,
+                            Rank = diagnolRank,
+                            IsCapture = true
+                        };
                     }
                 }
 
 
-                File enPassantLeft = CurrentFile - 1;
-                if ((int)enPassantLeft >= 0 && boardState.Pieces[(int)enPassantLeft, (int)CurrentRank] is Pawn leftPawn && leftPawn.CanEnPassant)
+                Files enPassantLeft = File - 1;
+                if ((int)enPassantLeft >= 0 && boardPieces[enPassantLeft, Rank] is Pawn leftPawn && leftPawn.CanEnPassant)
                 {
-                    yield return new MoveData()
+                    yield return new PossibleMoveInfo()
                     {
                         File = enPassantLeft,
-                        Rank = CurrentRank + 1,
-                        Type = MoveType.Enpassant
+                        Rank = Rank + 1,
+                        IsCapture = true
                     };
                 }
 
-                File enPassantRight = CurrentFile + 1;
-                if ((int)enPassantRight <= 7 && boardState.Pieces[(int)enPassantRight, (int)CurrentRank] is Pawn rightPawn && rightPawn.CanEnPassant)
+                Files enPassantRight = File + 1;
+                if ((int)enPassantRight <= 7 && boardPieces[enPassantRight, Rank] is Pawn rightPawn && rightPawn.CanEnPassant)
                 {
-                    yield return new MoveData()
+                    yield return new PossibleMoveInfo()
                     {
                         File = enPassantRight,
-                        Rank = CurrentRank + 1,
-                        Type = MoveType.Enpassant
+                        Rank = Rank + 1,
+                        IsCapture = true
                     };
                 }
             }
             else
             {
-                if (CurrentRank == Rank.Seven)
+                if (Rank == Ranks._7)
                 {
                     for (int i = 0; i < 2; i++)
                     {
-                        if (boardState.Pieces[(int)CurrentFile, (int)CurrentRank - i - 1] != null)
+                        if (boardPieces[File, Rank - i - 1] != null)
                         {
                             break;
                         }
-                        yield return new MoveData() { File = CurrentFile, Rank = CurrentRank - i - 1, Type = MoveType.Move };
+
+                        yield return new PossibleMoveInfo() 
+                        { 
+                            File = File,
+                            Rank = Rank - i - 1,
+                            IsCapture = false
+                        };
                     }
                 }
                 else
                 {
-                    if (boardState.Pieces[(int)CurrentFile, (int)CurrentRank - 1] == null)
+                    if (boardPieces[File, Rank - 1] == null)
                     {
-                        yield return new MoveData() { File = CurrentFile, Rank = CurrentRank - 1, Type = MoveType.Move };
+                        yield return new PossibleMoveInfo() 
+                        {
+                            File = File,
+                            Rank = Rank - 1,
+                            IsCapture = false
+                        };
                     }
                 }
 
-                Rank diagnolRank = CurrentRank - 1;
-                if (CurrentFile != File.A)
+                Ranks diagnolRank = Rank - 1;
+                if (File != Files.A)
                 {
-                    File diagnolFileLeft = CurrentFile - 1;
-                    Piece targetPieceLeft = boardState.Pieces[(int)diagnolFileLeft, (int)diagnolRank];
+                    Files diagnolFileLeft = File - 1;
+                    Piece targetPieceLeft = boardPieces[diagnolFileLeft, diagnolRank];
 
-                    if (targetPieceLeft != null && targetPieceLeft.IsWhite != IsWhite)
+                    if (targetPieceLeft != null && targetPieceLeft.Color != Color)
                     {
-                        yield return new MoveData() { File = diagnolFileLeft, Rank = diagnolRank, Type = MoveType.Take };
+                        yield return new PossibleMoveInfo() 
+                        {
+                            File = diagnolFileLeft,
+                            Rank = diagnolRank,
+                            IsCapture = true
+                        };
                     }
                 }
 
-                if (CurrentFile != File.H)
+                if (File != Files.H)
                 {
-                    File diagnolFileRight = CurrentFile + 1;
-                    Piece targetPieceRight = boardState.Pieces[(int)diagnolFileRight, (int)diagnolRank];
+                    Files diagnolFileRight = File + 1;
+                    Piece targetPieceRight = boardPieces[diagnolFileRight, diagnolRank];
 
-                    if (targetPieceRight != null && targetPieceRight.IsWhite != IsWhite)
+                    if (targetPieceRight != null && targetPieceRight.Color != Color)
                     {
-                        yield return new MoveData() { File = diagnolFileRight, Rank = diagnolRank, Type = MoveType.Take };
+                        yield return new PossibleMoveInfo() 
+                        {
+                            File = diagnolFileRight,
+                            Rank = diagnolRank,
+                            IsCapture = true
+                        };
                     }
                 }
 
-                File enPassantLeft = CurrentFile - 1;
-                if ((int)enPassantLeft >= 0 && boardState.Pieces[(int)enPassantLeft, (int)CurrentRank] is Pawn leftPawn && leftPawn.CanEnPassant)
+                Files enPassantLeft = File - 1;
+                if ((int)enPassantLeft >= 0 && boardPieces[enPassantLeft, Rank] is Pawn leftPawn && leftPawn.CanEnPassant)
                 {
-                    yield return new MoveData()
+                    yield return new PossibleMoveInfo()
                     {
                         File = enPassantLeft,
-                        Rank = CurrentRank - 1,
-                        Type = MoveType.Enpassant
+                        Rank = Rank - 1,
+                        IsCapture = true
                     };
                 }
 
-                File enPassantRight = CurrentFile + 1;
-                if ((int)enPassantRight <= 7 && boardState.Pieces[(int)enPassantRight, (int)CurrentRank] is Pawn rightPawn && rightPawn.CanEnPassant)
+                Files enPassantRight = File + 1;
+                if ((int)enPassantRight <= 7 && boardPieces[enPassantRight, Rank] is Pawn rightPawn && rightPawn.CanEnPassant)
                 {
-                    yield return new MoveData()
+                    yield return new PossibleMoveInfo()
                     {
                         File = enPassantRight,
-                        Rank = CurrentRank - 1,
-                        Type = MoveType.Enpassant
+                        Rank = Rank - 1,
+                        IsCapture = true
                     };
                 }
             }
