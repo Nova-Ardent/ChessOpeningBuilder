@@ -87,7 +87,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e858f63a63287cb4ba02381f63810020, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  failedColor: {r: 0.43137255, g: 0.24705882, b: 0.24705882, a: 0}
+  failedColor: {r: 0.43137255, g: 0.24705882, b: 0.24705882, a: 1}
+  normalColor: {r: 0.24705882, g: 0.24705882, b: 0.24705882, a: 1}
   _backGround: {fileID: 7729237212260768729}
   label: {fileID: 9533935873422072}
 --- !u!114 &8639221131339509589

@@ -16,8 +16,13 @@ namespace Trainer.Data.Moves
         public string MoveNotation;
         public string HintOne;
         public string HintTwo;
+        
         public int TimesGuessed;
         public int TimesCorrect;
+
+        public int VariationTimesGuessed;
+        public int VariationTimesCorrect;
+
         public PieceColor Color;
 
         public override string ToString()

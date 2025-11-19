@@ -8,6 +8,7 @@ using Board.Audio;
 using Board.Pieces.Types;
 using System.Collections.Generic;
 using System;
+using System.IO;
 
 namespace Board
 {
@@ -66,11 +67,6 @@ namespace Board
 
         public void SelectSquare(Files file, Ranks rank)
         {
-            if (!CanMakeMoves())
-            {
-                return;
-            }
-
             if (_boardState.Pieces[file, rank] != null)
             {
                 CurrentlySelectedPiece = _boardState.Pieces[file, rank];
@@ -86,6 +82,11 @@ namespace Board
 
         public void MoveHighlightedPiece(Files toFile, Ranks toRank, PieceTypes? promotion = null, bool animate = false)
         {
+            if (_pieceBeingAnimated)
+            {
+                _animatedPiece.ForceFinishAnimation();
+            }
+
             if (!CanMakeMoves())
             {
                 return;

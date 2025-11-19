@@ -10,6 +10,8 @@ namespace Board.Stockfish
 {
     public class StockfishObject : MonoBehaviour
     {
+        [SerializeField] String _filePath;
+
         [SerializeField] EvalBar _evalBar;
         [SerializeField] TopMoveList _topMoveList;
 
@@ -28,9 +30,11 @@ namespace Board.Stockfish
 
         void Awake()
         {
+            string path = Application.streamingAssetsPath + "\\Stockfish\\stockfish\\stockfish-windows-x86-64-avx2.exe";
+
             ProcessStartInfo launchInfo = new ProcessStartInfo()
             {
-                FileName = System.IO.Directory.GetCurrentDirectory() + "\\Assets\\Stockfish\\stockfish\\stockfish-windows-x86-64-avx2.exe",
+                FileName = path,
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardError = true,
@@ -57,8 +61,15 @@ namespace Board.Stockfish
             }
         }
 
+        public void OnApplicationQuit()
+        {
+            stockFishProcess?.Close();
+            stockFishProcess?.Dispose();
+        }
+
         private void OnDestroy()
         {
+            stockFishProcess?.Close();
             stockFishProcess?.Dispose();
         }
 

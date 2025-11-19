@@ -1,5 +1,6 @@
 using Board;
 using Board.Moves;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UI;
@@ -37,6 +38,8 @@ namespace History.MoveHistory
         List<MoveLabel> _moveLabelPool = new List<MoveLabel>();
         List<MoveIndexLabel> _moveIndexLabelPool = new List<MoveIndexLabel>();
 
+        Action _onLabelsUpdatedCallback = () => { };
+
         private void Start()
         {
             _scrollPanel.RegisterOnScrollUpdate(OnScrollUpdate);
@@ -61,6 +64,8 @@ namespace History.MoveHistory
             UpdateIndexLabels();
             UpdateMoveLabels();
             OnScrollUpdate(_scrollAmount);
+
+            _onLabelsUpdatedCallback();
         }
 
         void UpdateIndexLabels()
@@ -147,6 +152,7 @@ namespace History.MoveHistory
             foreach (var label in _moveLabelPool)
             {
                 label.gameObject.SetActive(false);
+                label.SetColorToNormal();
             }
 
             foreach (var indexLabel in _moveIndexLabelPool)
@@ -172,6 +178,31 @@ namespace History.MoveHistory
 
             _boardObject.RemoveLatestMove();
             UpdateView();
+        }
+
+        public void RegisterLabelsUpdatedCallback(Action callback)
+        {
+            _onLabelsUpdatedCallback += callback;
+        }
+
+        public void MarkLabelAsIncorrect(int index)
+        {
+            if (index >= 0 && index < _moveLabelPool.Count)
+            {
+                _moveLabelPool[index].SetColorToFailed();
+            }
+            else
+            {
+                while (index >= _moveLabelPool.Count)
+                {
+                    MoveLabel moveLabel = Instantiate(_moveLabelPrefab, transform);
+                    moveLabel.gameObject.SetActive(false);
+                    _moveLabelPool.Add(moveLabel);
+                }
+
+                OnScrollUpdate(_scrollAmount);
+                _moveLabelPool[index].SetColorToFailed();
+            }
         }
     }
 }

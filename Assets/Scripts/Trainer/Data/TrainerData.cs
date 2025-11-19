@@ -19,7 +19,8 @@ namespace Trainer.Data
         public enum StatsView
         {
             ByMove,
-            ByBranch
+            ByBranch,
+            ByVariation,
         }
 
         public enum TrainingMethod

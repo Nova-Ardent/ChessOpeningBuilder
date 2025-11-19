@@ -61,6 +61,13 @@ namespace Trainer.MoveViewer
                     nextMove.PercentageBar.Percentage = 1.0f * moveInformation.TimesCorrect / moveInformation.TimesGuessed;
                 }
             }
+            else if (statsView == StatsView.ByVariation)
+            {
+                if (moveInformation.VariationTimesGuessed > 0)
+                {
+                    nextMove.PercentageBar.Percentage = 1.0f * moveInformation.VariationTimesCorrect / moveInformation.VariationTimesGuessed;
+                }
+            }
             else
             {
                 int timesGuessed = 0;

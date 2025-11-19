@@ -64,6 +64,14 @@ namespace Trainer.AI
             _boardObject.RegisterOnMoveCallback(OnPlayerMoved);
         }
 
+        private void Update()
+        {
+            if (IsTrainingActive && _nextVariationButton.activeSelf & Input.GetKey(KeyCode.Space))
+            {
+                LoadNextVariation();
+            }
+        }
+
         public void StartTraining(TrainerData trainerData)
         {
             TurnOffNonTrainingModules();
@@ -138,6 +146,9 @@ namespace Trainer.AI
             trainerMoveInformation.TimesCorrect = 0;
             trainerMoveInformation.TimesGuessed = 0;
 
+            trainerMoveInformation.VariationTimesGuessed = 0;
+            trainerMoveInformation.VariationTimesCorrect = 0;
+
             if (depth == TrainerData.Depth && TrainerData.DepthType == TrainerData.TrainerType.ByMoveCount)
             {
                 CurrentTrainingSession.Variations.Add(new Variation()
@@ -172,6 +183,17 @@ namespace Trainer.AI
         public void LoadNextVariation()
         {
             _nextVariationButton.SetActive(false);
+
+
+            Variation CurrentVariation = CurrentTrainingSession.CurrentVariation;
+            foreach (var move in CurrentVariation.MoveList)
+            {
+                move.VariationTimesGuessed++;
+                if (CurrentVariation.WasPerfect)
+                {
+                    move.VariationTimesCorrect++;
+                }
+            }
 
             if (TrainerData.Method == TrainerData.TrainingMethod.ReplayFailedMoves)
             {
@@ -234,8 +256,6 @@ namespace Trainer.AI
                 return;
             }
 
-            //_boardObject.ClearMarkings();
-
             Variation variation = CurrentTrainingSession.CurrentVariation;
             if (variation.CurrentMoveIndex >= variation.MoveList.Count)
             {
@@ -260,7 +280,9 @@ namespace Trainer.AI
             {
                 currentTrainerMove.TimesGuessed++;
                 CurrentTrainingSession.CurrentVariation.WasPerfect = false;
+
                 _boardHistoryObject.RemoveLatestMove();
+                _boardHistoryObject.MarkLabelAsIncorrect(variation.CurrentMoveIndex);
             }
         }
 
@@ -300,6 +322,11 @@ namespace Trainer.AI
                 {
                     _boardObject.MovePieceAlgebraic(variation.MoveList[variation.CurrentMoveIndex].MoveNotation);
                     variation.CurrentMoveIndex++;
+
+                    if (variation.CurrentMoveIndex >= variation.MoveList.Count)
+                    {
+                        _nextVariationButton.SetActive(true);
+                    }
                 }
 
                 yield return null;

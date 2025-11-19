@@ -9,6 +9,7 @@ namespace History.MoveHistory
     public class MoveLabel : MonoBehaviour
     {
         [SerializeField] Color failedColor;
+        [SerializeField] Color normalColor;
         [SerializeField] RawImage _backGround;
 
         Action _callback;
@@ -27,15 +28,17 @@ namespace History.MoveHistory
 
         public void OnClick()
         {
-            //if (FileBrowser.IsOpen)
-            //    return;
-
             _callback();
         }
 
         public void SetColorToFailed()
         {
             _backGround.color = failedColor;
+        }
+
+        public void SetColorToNormal()
+        {
+            _backGround.color = normalColor;
         }
     }
 }

@@ -2952,6 +2952,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 557c74d863392764f82bc472884a0bcd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _filePath: 
   _evalBar: {fileID: 1148971181}
   _topMoveList: {fileID: 1436406683}
 --- !u!1 &602619753
@@ -4838,12 +4839,36 @@ PrefabInstance:
       value: Stats Display
       objectReference: {fileID: 0}
     - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
+      propertyPath: m_Options.m_Options.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
       propertyPath: m_Options.m_Options.Array.data[0].m_Text
       value: Stats By Move
       objectReference: {fileID: 0}
     - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
       propertyPath: m_Options.m_Options.Array.data[1].m_Text
       value: Stats By Branch
+      objectReference: {fileID: 0}
+    - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
+      propertyPath: m_Options.m_Options.Array.data[2].m_Text
+      value: Stats By Variation
+      objectReference: {fileID: 0}
+    - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
+      propertyPath: m_Options.m_Options.Array.data[2].m_Color.a
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
+      propertyPath: m_Options.m_Options.Array.data[2].m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
+      propertyPath: m_Options.m_Options.Array.data[2].m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
+      propertyPath: m_Options.m_Options.Array.data[2].m_Color.r
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
       propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Target
