@@ -149,6 +149,9 @@ namespace Board.State
                 return;
             }
 
+            _enPassantPosition = null;
+            _enPassantPawn = null;
+
             for (int i = 0; i < gameStateFen.Length - 1; i++)
             {
                 if (char.IsLetter(gameStateFen[i]) && char.IsNumber(gameStateFen[i + 1]))
