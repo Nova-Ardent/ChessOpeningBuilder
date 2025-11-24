@@ -5,7 +5,9 @@ on: [push, pull_request]
 jobs:
   buildForAllSupportedPlatforms:
     name: Build for ${{ matrix.targetPlatform }}
-    runs-on: Windows-Larger
+    runs-on:
+      group: LargerRunners
+      labels: [Windows-Larger]
     strategy:
       fail-fast: false
       matrix:
