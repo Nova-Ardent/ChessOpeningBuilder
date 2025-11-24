@@ -138,10 +138,16 @@ namespace Trainer
             }
         }
 
-        public void RemoveAllChildrenOfCurrent()
+        public void RemoveBranch()
         {
+            if (_currentMove.ParentMove == null)
+            {
+                return;
+            }
+
             _currentMove.PossibleNextMoves.Clear();
-            UpdateViewedMove(_currentMove);
+            _currentMove.ParentMove.PossibleNextMoves.Remove(_currentMove);
+            UpdateViewedMove(_currentMove.ParentMove);
         }
     }
 }
