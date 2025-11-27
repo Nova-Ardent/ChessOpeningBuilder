@@ -1,10 +1,12 @@
 using Board.Evaluation;
 using Board.History.TopMove;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
+using UI;
 using UnityEngine;
-using System;
+using static UnityEngine.Rendering.DebugUI;
 
 namespace Board.Stockfish
 {
@@ -15,6 +17,10 @@ namespace Board.Stockfish
         [SerializeField] EvalBar _evalBar;
         [SerializeField] TopMoveList _topMoveList;
 
+        [SerializeField] ValueInput _threadCount;
+        [SerializeField] ValueInput _depth;
+
+        public string LastFEN { get; private set; }
         public bool LastTurnWasWhite { get; private set; }
         public bool HasMate { get; private set; }
         public int MateIndex { get; private set; }
@@ -54,6 +60,13 @@ namespace Board.Stockfish
                 SendLine("uci");
                 SendLine("isready");
                 SendLine("ucinewgame");
+
+                SetThreads(_threadCount.CurrentValue);
+                _threadCount.RegisterOnValueChanged(SetThreads);
+
+                SetDepth(_depth.CurrentValue);
+                _depth.RegisterOnValueChanged(x => GoToPosition(LastFEN, LastTurnWasWhite));
+
             }
             else
             {
@@ -73,10 +86,28 @@ namespace Board.Stockfish
             stockFishProcess?.Dispose();
         }
 
+        void SetThreads(int value)
+        {
+            SendLine("setoption name Threads value " + value);
+        }
+
+        void SetDepth(int value)
+        {
+            if (value <= 0)
+            {
+                SendLine("go infinite");
+            }
+            else
+            {
+                SendLine("go depth " + value);
+            }
+        }
+
         void SendLine(string command)
         {
             try
             {
+                UnityEngine.Debug.Log(command);
                 stockFishProcess.StandardInput.WriteLine(command);
                 stockFishProcess.StandardInput.Flush();
             }
@@ -89,6 +120,7 @@ namespace Board.Stockfish
 
         public void GoToPosition(string fen, bool isWhite)
         {
+            LastFEN = fen;
             LastTurnWasWhite = isWhite;
 
             SendLine("stop");
@@ -96,7 +128,7 @@ namespace Board.Stockfish
 
             SendLine("position fen " + fen);
             SendLine("setoption name multipv value 5");
-            SendLine("go infinite");
+            SetDepth(_depth.CurrentValue);
         }
 
         public void ProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
