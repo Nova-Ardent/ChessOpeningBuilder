@@ -159,7 +159,7 @@ namespace Trainer.AI
 
             _marathonIndexWasFailed = false;
 
-            if (TrainerData.DepthType == TrainerData.TrainerType.MarathonMode)
+            if (TrainerData.DepthType == TrainerData.TrainerType.MarathonMode || TrainerData.DepthType == TrainerData.TrainerType.MarathonUnique)
             {
                 _marathonIndex++;
                 BuildVariations(_startingMove ?? TrainerData.StartingMove, 0);
@@ -173,6 +173,19 @@ namespace Trainer.AI
             else
             {
                 BuildVariations(_startingMove ?? TrainerData.StartingMove, 0);
+            }
+
+            if (TrainerData.DepthType == TrainerData.TrainerType.MarathonUnique)
+            {
+                CurrentTrainingSession.Variations = CurrentTrainingSession.Variations
+                    .Where(v => v.MoveList.Count == _marathonIndex)
+                    .ToList();
+
+                if (CurrentTrainingSession.Variations.Count == 0)
+                {
+                    StopTraining();
+                    return;
+                }
             }
 
             CurrentTrainingSession.Variations.Shuffle();
@@ -189,7 +202,7 @@ namespace Trainer.AI
             trainerMoveInformation.VariationTimesCorrect = 0;
 
             if ((depth == TrainerData.Depth && TrainerData.DepthType == TrainerData.TrainerType.ByMoveCount)
-                || (depth == _marathonIndex && TrainerData.DepthType == TrainerData.TrainerType.MarathonMode))
+                || (depth == _marathonIndex && (TrainerData.DepthType == TrainerData.TrainerType.MarathonMode || TrainerData.DepthType == TrainerData.TrainerType.MarathonUnique)))
             {
                 CurrentTrainingSession.Variations.Add(new Variation()
                 {
@@ -262,7 +275,7 @@ namespace Trainer.AI
                 }
                 else
                 {
-                    if (TrainerData.DepthType == TrainerData.TrainerType.MarathonMode)
+                    if (TrainerData.DepthType == TrainerData.TrainerType.MarathonMode || TrainerData.DepthType == TrainerData.TrainerType.MarathonUnique)
                     {
                         LoadNextDepthForMarathon();
                     }
@@ -282,7 +295,7 @@ namespace Trainer.AI
         {
             _boardHistoryObject.ClearHistory();
 
-            if (TrainerData.DepthType == TrainerData.TrainerType.MarathonMode)
+            if (TrainerData.DepthType == TrainerData.TrainerType.MarathonMode || TrainerData.DepthType == TrainerData.TrainerType.MarathonUnique)
             {
                 _CurrentVariationText.text = $"Marathon Depth {_marathonIndex}\nVariation {CurrentTrainingSession.Index + 1} / {CurrentTrainingSession.Variations.Count}";
             }

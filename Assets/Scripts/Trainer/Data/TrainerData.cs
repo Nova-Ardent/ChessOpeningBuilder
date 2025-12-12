@@ -15,6 +15,7 @@ namespace Trainer.Data
             ByCompleteVariation,
             ByMoveCount,
             MarathonMode,
+            MarathonUnique,
         }
 
         public enum StatsView
