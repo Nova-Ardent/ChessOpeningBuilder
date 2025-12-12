@@ -8,6 +8,7 @@ using System.Linq;
 using TMPro;
 using Trainer.Data;
 using Trainer.Data.Moves;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using static Trainer.Data.TrainerData;
 
@@ -25,7 +26,7 @@ namespace Trainer.Options
         public ReactiveOption<TrainingMethod> TrainingMethod = new ReactiveOption<TrainingMethod>();
 
         public TMP_InputField DepthInputField;
-
+        public TextMeshProUGUI DepthText;
 
         void Awake()
         {
@@ -35,9 +36,29 @@ namespace Trainer.Options
             TrainingMethod.Init();
 
             Color.RegisterOnValueChanged((newValue) => { TrainerData.Color = newValue; });
-            TrainerType.RegisterOnValueChanged((newValue) => { TrainerData.DepthType = newValue; });
+            TrainerType.RegisterOnValueChanged(VariationTypeChanged);
             StatsView.RegisterOnValueChanged((newValue) => { TrainerData.StatsDisplay = newValue; });
             TrainingMethod.RegisterOnValueChanged((newValue) => { TrainerData.Method = newValue; });
+        }
+
+        void VariationTypeChanged(TrainerType newValue)
+        {
+            TrainerData.DepthType = newValue;
+            if (DepthText != null)
+            {
+                switch (newValue)
+                {
+                    case TrainerData.TrainerType.MarathonMode:
+                        DepthText.text = "Starting Depth";
+                        break;
+                    case TrainerData.TrainerType.ByCompleteVariation:
+                        DepthText.text = "Variations";
+                        break;
+                    case TrainerData.TrainerType.ByMoveCount:
+                        DepthText.text = "Max Depth";
+                        break;
+                }
+            }
         }
 
         public void Save()

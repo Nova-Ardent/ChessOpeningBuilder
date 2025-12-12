@@ -1358,6 +1358,9 @@ MonoBehaviour:
   IsTrainingActive: 0
   HasUsedHint: 0
   HasUsedBothHints: 0
+  _marathonIndex: 0
+  _variationDepth: 0
+  _marathonIndexWasFailed: 0
 --- !u!114 &311087468 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
@@ -5844,6 +5847,7 @@ MonoBehaviour:
   TrainingMethod:
     dropdown: {fileID: 636816}
   DepthInputField: {fileID: 512017847}
+  DepthText: {fileID: 1682367610}
 --- !u!1 &1298139367
 GameObject:
   m_ObjectHideFlags: 0
