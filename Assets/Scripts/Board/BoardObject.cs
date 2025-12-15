@@ -33,6 +33,11 @@ namespace Board
 
         private void Update()
         {
+            if (_animatedPiece == null || _animatedPiece.transform == null || _animatedPiece.gameObject == null)
+            {
+                _pieceBeingAnimated = false;
+                return;
+            }
             _animatedPiece?.UpdateAnimation();
         }
 
