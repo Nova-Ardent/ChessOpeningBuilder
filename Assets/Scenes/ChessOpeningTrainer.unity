@@ -1055,7 +1055,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
       propertyPath: m_Options.m_Options.Array.size
-      value: 4
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
       propertyPath: m_Options.m_Options.Array.data[0].m_Text
@@ -1072,6 +1072,10 @@ PrefabInstance:
     - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
       propertyPath: m_Options.m_Options.Array.data[3].m_Text
       value: Marathon Unique Mode
+      objectReference: {fileID: 0}
+    - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
+      propertyPath: m_Options.m_Options.Array.data[4].m_Text
+      value: Evolution Mode
       objectReference: {fileID: 0}
     - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
       propertyPath: m_Options.m_Options.Array.data[2].m_Color.a
@@ -1103,6 +1107,22 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
       propertyPath: m_Options.m_Options.Array.data[3].m_Color.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
+      propertyPath: m_Options.m_Options.Array.data[4].m_Color.a
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
+      propertyPath: m_Options.m_Options.Array.data[4].m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
+      propertyPath: m_Options.m_Options.Array.data[4].m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}
+      propertyPath: m_Options.m_Options.Array.data[4].m_Color.r
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3680232186381787066, guid: d7737ea4dbf6b1a40abac5e7b6d562ec, type: 3}

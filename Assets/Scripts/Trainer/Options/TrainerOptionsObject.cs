@@ -48,6 +48,7 @@ namespace Trainer.Options
             {
                 switch (newValue)
                 {
+                    case TrainerData.TrainerType.EvolutionMode:
                     case TrainerData.TrainerType.MarathonMode:
                     case TrainerData.TrainerType.MarathonUnique:
                         DepthText.text = "Starting Depth";

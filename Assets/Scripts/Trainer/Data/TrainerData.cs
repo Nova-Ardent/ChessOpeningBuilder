@@ -16,6 +16,7 @@ namespace Trainer.Data
             ByMoveCount,
             MarathonMode,
             MarathonUnique,
+            EvolutionMode,
         }
 
         public enum StatsView

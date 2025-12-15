@@ -1,0 +1,41 @@
+using Trainer.Data.Moves;
+using UnityEngine;
+
+namespace Trainer.AI.Modes
+{
+    public class ByMoveCountMode : Mode
+    {
+        public override void BuildVariations(TrainerMoveInformation trainerMoveInformation, int depth)
+        {
+            trainerMoveInformation.TimesCorrect = 0;
+            trainerMoveInformation.TimesGuessed = 0;
+
+            trainerMoveInformation.VariationTimesGuessed = 0;
+            trainerMoveInformation.VariationTimesCorrect = 0;
+
+            if (TrainerData.Depth == depth)
+            {
+                CurrentTrainingSession.Variations.Add(new Variation()
+                {
+                    WasPerfect = false,
+                    MoveList = trainerMoveInformation.GetMoveChain()
+                });
+            }
+            else if (trainerMoveInformation.PossibleNextMoves.Count == 0)
+            {
+                CurrentTrainingSession.Variations.Add(new Variation()
+                {
+                    WasPerfect = false,
+                    MoveList = trainerMoveInformation.GetMoveChain()
+                });
+            }
+            else
+            {
+                foreach (var nextMove in trainerMoveInformation.PossibleNextMoves)
+                {
+                    BuildVariations(nextMove, depth + 1);
+                }
+            }
+        }
+    }
+}
