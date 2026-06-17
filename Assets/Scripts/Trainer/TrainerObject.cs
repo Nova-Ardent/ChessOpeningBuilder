@@ -126,7 +126,7 @@ namespace Trainer
                         HintOne = $"{move.From.File.AsText()}{move.From.Rank.AsText()}",
                         HintTwo = $"{move.To.File.AsText()}{move.To.Rank.AsText()}",
                         Color = currentMove.Color == PieceColor.White ? PieceColor.Black : PieceColor.White,
-                        moveChangePercentage = currentMove.Color == trainerColor ? 1 : 0,
+                        moveChangePercentage = currentMove.Color == trainerColor ? 0 : 1,
                     };
 
                     currentMove.PossibleNextMoves.Add(newMove);
