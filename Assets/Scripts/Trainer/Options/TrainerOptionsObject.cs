@@ -249,10 +249,15 @@ namespace Trainer.Options
                 value /= 100;
                 _trainerObject.SetCurrentMoveMoveChance(value);
 
-                if (value <= 0 || value > 1)
+                if (value > 100)
                 {
                     MoveChanceField.text = "100.0";
                     _trainerObject.SetCurrentMoveMoveChance(1);
+                }
+                else if (value < 0)
+                {
+                    MoveChanceField.text = "0.0";
+                    _trainerObject.SetCurrentMoveMoveChance(0);
                 }
             }
             else
