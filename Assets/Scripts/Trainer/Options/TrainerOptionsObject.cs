@@ -305,10 +305,11 @@ namespace Trainer.Options
         {
             if (currentMove.PossibleNextMoves.Count == 0)
             {
-                if (currentMove.moveChangeTotalPercentage > amount)
+                float totalPercentage = currentMove.GetTotalMovePercentage();
+                if (totalPercentage > amount)
                 {
                     mostLikelyLeaf = currentMove;
-                    amount = currentMove.moveChangeTotalPercentage;
+                    amount = totalPercentage;
                 }
             }
 

@@ -19,7 +19,6 @@ namespace Trainer.Data.Moves
         public string MoveDescription;
 
         public float moveChangePercentage;
-        public float moveChangeTotalPercentage;
         
         public int TimesGuessed;
         public int TimesCorrect;
@@ -32,6 +31,16 @@ namespace Trainer.Data.Moves
         public override string ToString()
         {
             return MoveNotation;
+        }
+
+        public float GetTotalMovePercentage()
+        {
+            float totalPercentage = 1;
+            foreach (var move in GetMoveChain())
+            {
+                totalPercentage *= move.moveChangePercentage;
+            }
+            return totalPercentage;
         }
 
         public List<TrainerMoveInformation> GetMoveChain()
@@ -64,7 +73,6 @@ namespace Trainer.Data.Moves
             yield return new string('\t', depth) + " Move: " + MoveNotation;
             yield return new string('\t', depth) + " Description: " + MoveDescription;
             yield return new string('\t', depth) + " moveChangePercentage: " + moveChangePercentage;
-            yield return new string('\t', depth) + " moveChangeTotalPercentage: " + moveChangeTotalPercentage;
             yield return new string('\t', depth) + " Count: " + PossibleNextMoves.Count;
 
             foreach (var nextMove in PossibleNextMoves)
@@ -137,21 +145,15 @@ namespace Trainer.Data.Moves
                     moveChangePercentage = 0f;
                 }
 
-                contents.MoveNext();
-                string moveChangeTotalPercentageLine = contents.Current.Trim();
-                if (moveChangeTotalPercentageLine.StartsWith("moveChangeTotalPercentage: "))
+                if (fileVersion <= 6)
                 {
-                    moveChangeTotalPercentage = float.Parse(moveChangeTotalPercentageLine.Split(new string[] { "moveChangeTotalPercentage: " }, StringSplitOptions.None)[1].Trim());
-                }
-                else
-                {
-                    moveChangeTotalPercentage = 0f;
+                    contents.MoveNext();
+                    // remove totalMoveChangePercentage line if it exists in older versions
                 }
             }
             else
             {
                 moveChangePercentage = 0;
-                moveChangeTotalPercentage = 0;
             }
 
             contents.MoveNext();

@@ -107,6 +107,7 @@ namespace Trainer
         {
             bool brokenChain = false;
             TrainerMoveInformation currentMove = _trainerOptionsObject.TrainerData.StartingMove;
+            PieceColor trainerColor = _trainerOptionsObject.TrainerData.Color;
 
             foreach (MoveInformation move in _boardObject.GetMoveHistory())
             {
@@ -124,7 +125,8 @@ namespace Trainer
                         MoveNotation = move.ToString(),
                         HintOne = $"{move.From.File.AsText()}{move.From.Rank.AsText()}",
                         HintTwo = $"{move.To.File.AsText()}{move.To.Rank.AsText()}",
-                        Color = currentMove.Color == PieceColor.White ? PieceColor.Black : PieceColor.White
+                        Color = currentMove.Color == PieceColor.White ? PieceColor.Black : PieceColor.White,
+                        moveChangePercentage = currentMove.Color == trainerColor ? 1 : 0,
                     };
 
                     currentMove.PossibleNextMoves.Add(newMove);
