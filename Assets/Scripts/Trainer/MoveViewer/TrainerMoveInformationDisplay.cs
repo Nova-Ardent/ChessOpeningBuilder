@@ -16,6 +16,7 @@ namespace Trainer.MoveViewer
 
         public RawImage Background;
         public TextMeshProUGUI MoveNameText;
+        public TextMeshProUGUI MoveDescriptionText;
         public PercentageBar PercentageBar;
 
         Action<TrainerMoveInformation> _callBack = null;
@@ -25,7 +26,10 @@ namespace Trainer.MoveViewer
         {
             _moveInformation = moveInformation;
             MoveNameText.text = moveInformation.MoveNotation;
+            MoveDescriptionText.text = moveInformation.MoveDescription?.Trim() ?? "";
             PercentageBar.Percentage = 1f;
+
+            UpdateDisplaySize();
         }
 
         public void SetCallBack(Action<TrainerMoveInformation> callBack)
@@ -46,6 +50,37 @@ namespace Trainer.MoveViewer
         public void SetAsBlackTile()
         {
             Background.color = BlackColor;
+        }
+
+        public void SetDescription(string text)
+        {
+            MoveDescriptionText.text = text?.Trim() ?? "";
+            _moveInformation.MoveDescription = text?.Trim() ?? "";
+
+            UpdateDisplaySize();
+        }
+
+        public string GetDescription()
+        {
+            return _moveInformation.MoveDescription;
+        }
+
+        void UpdateDisplaySize()
+        {
+            if (string.IsNullOrEmpty(MoveDescriptionText.text))
+            {
+                if (this.transform is RectTransform transform)
+                {
+                    transform.sizeDelta = new Vector2(transform.sizeDelta.x, 60);
+                }
+            }
+            else
+            {
+                if (this.transform is RectTransform transform)
+                {
+                    transform.sizeDelta = new Vector2(transform.sizeDelta.x, 72.5f);
+                }
+            }
         }
     }
 }

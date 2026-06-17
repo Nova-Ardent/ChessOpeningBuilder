@@ -33,7 +33,7 @@ namespace Trainer.Data
             RepeatVariationOnFailed,
         }
 
-        public const int Version = 4;
+        public const int Version = 5;
 
         public PieceColor Color = PieceColor.White;
         public int Depth = -1;
@@ -123,7 +123,7 @@ namespace Trainer.Data
             }
 
             trainerData.StartingMove = new TrainerMoveInformation();
-            trainerData.StartingMove.Deserialize(contents);
+            trainerData.StartingMove.Deserialize(contents, version);
 
             SetMoveColors(trainerData.StartingMove);
 

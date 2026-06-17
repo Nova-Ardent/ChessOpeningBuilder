@@ -98,6 +98,8 @@ namespace Trainer
             {
                 _nextMoveContainer.ClearMoves();
             }
+
+            _trainerOptionsObject.DescriptionInputField.text = _currentMoveContainer.GetDescription();
         }
 
         public void AddVariation()
@@ -153,6 +155,14 @@ namespace Trainer
             _currentMove.PossibleNextMoves.Clear();
             _currentMove.ParentMove.PossibleNextMoves.Remove(_currentMove);
             UpdateViewedMove(_currentMove.ParentMove);
+        }
+
+        public void SetDescriptionOnCurrentMove(string text)
+        {
+            if (_currentMove != null)
+            {
+                _currentMoveContainer.SetDescription(text);
+            }
         }
     }
 }

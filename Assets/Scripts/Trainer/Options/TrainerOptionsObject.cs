@@ -26,6 +26,7 @@ namespace Trainer.Options
         public ReactiveOption<TrainingMethod> TrainingMethod = new ReactiveOption<TrainingMethod>();
 
         public TMP_InputField DepthInputField;
+        public TMP_InputField DescriptionInputField;
         
         public TMP_InputField EvolutionAccelerationField;
         public GameObject EvolutionMode;
@@ -253,6 +254,11 @@ namespace Trainer.Options
                 EvolutionAccelerationField.text = "";
                 TrainerData.EvolutionAcceleration = 1;
             }
+        }
+
+        public void OnChangeDescription()
+        {
+            _trainerObject.SetDescriptionOnCurrentMove(DescriptionInputField.text);
         }
     }
 }

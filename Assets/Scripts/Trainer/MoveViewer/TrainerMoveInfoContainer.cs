@@ -48,6 +48,32 @@ namespace Trainer.MoveViewer
             }
         }
 
+        public void SetDescription(string text)
+        {
+            if (Moves.Length == 1)
+            {
+                Moves.First().SetDescription(text);
+            }
+            else
+            {
+                Debug.LogError("attempting to set description on multiple moves, this is not supported");
+            }
+        }
+
+        public string GetDescription()
+        {
+            if (Moves.Length == 1)
+            {
+                return Moves.First().GetDescription();
+            }
+            else
+            {
+                Debug.LogError("attempting to get description on multiple moves, this is not supported");
+                return "";
+            }
+
+        }
+
         TrainerMoveInformationDisplay MakeMoveDisplay(TrainerData.StatsView statsView, TrainerMoveInformation moveInformation, Transform parent)
         {
             var nextMove = Instantiate(_moveInfoDisplayPrefab, parent);

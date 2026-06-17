@@ -16,6 +16,7 @@ namespace Trainer.Data.Moves
         public string MoveNotation;
         public string HintOne;
         public string HintTwo;
+        public string MoveDescription;
         
         public int TimesGuessed;
         public int TimesCorrect;
@@ -58,6 +59,7 @@ namespace Trainer.Data.Moves
             yield return new string('\t', depth) + " hint1: " + HintOne;
             yield return new string('\t', depth) + " hint2: " + HintTwo;
             yield return new string('\t', depth) + " Move: " + MoveNotation;
+            yield return new string('\t', depth) + " Description: " + MoveDescription;
             yield return new string('\t', depth) + " Count: " + PossibleNextMoves.Count;
 
             foreach (var nextMove in PossibleNextMoves)
@@ -69,7 +71,7 @@ namespace Trainer.Data.Moves
             }
         }
 
-        public void Deserialize(IEnumerator<string> contents)
+        public void Deserialize(IEnumerator<string> contents, int fileVersion)
         {
             contents.MoveNext();
             string firstline = contents.Current.Trim();
@@ -99,6 +101,24 @@ namespace Trainer.Data.Moves
                 throw new Exception("Invalid format: Expected Move line.");
             }
 
+            if (fileVersion >= 5)
+            {
+                contents.MoveNext();
+                string descriptionLine = contents.Current.Trim();
+                if (descriptionLine.StartsWith("Description: "))
+                {
+                    MoveDescription = descriptionLine.Split(new string[] { "Description: " }, StringSplitOptions.None)[1].Trim();
+                }
+                else
+                {
+                    MoveDescription = "";
+                }
+            }
+            else
+            {
+                MoveDescription = "";
+            }
+
             contents.MoveNext();
             string countline = contents.Current.Trim();
             if (countline.StartsWith("Count: "))
@@ -108,7 +128,7 @@ namespace Trainer.Data.Moves
                 {
                     TrainerMoveInformation nextMove = new TrainerMoveInformation();
                     nextMove.ParentMove = this;
-                    nextMove.Deserialize(contents);
+                    nextMove.Deserialize(contents, fileVersion);
                     PossibleNextMoves.Add(nextMove);
                 }
             }
