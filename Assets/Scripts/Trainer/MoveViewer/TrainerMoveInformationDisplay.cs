@@ -19,6 +19,9 @@ namespace Trainer.MoveViewer
         public TextMeshProUGUI MoveDescriptionText;
         public PercentageBar PercentageBar;
 
+        public TextMeshProUGUI MovePercentageText;
+        public TextMeshProUGUI TotalMovePercentageText;
+
         Action<TrainerMoveInformation> _callBack = null;
         TrainerMoveInformation _moveInformation;
 
@@ -30,6 +33,7 @@ namespace Trainer.MoveViewer
             PercentageBar.Percentage = 1f;
 
             UpdateDisplaySize();
+            RefreshMovePercentage();
         }
 
         public void SetCallBack(Action<TrainerMoveInformation> callBack)
@@ -50,6 +54,31 @@ namespace Trainer.MoveViewer
         public void SetAsBlackTile()
         {
             Background.color = BlackColor;
+        }
+
+        public void SetMovePercentChange(float percentChance)
+        {
+            if (_moveInformation.ParentMove != null)
+            {
+                _moveInformation.moveChangePercentage = percentChance;
+                _moveInformation.moveChangeTotalPercentage = percentChance * _moveInformation.ParentMove.moveChangeTotalPercentage;
+
+                MovePercentageText.text = (100 * percentChance).ToString("0.0") + "%";
+                TotalMovePercentageText.text = (100 * percentChance * _moveInformation.ParentMove.moveChangeTotalPercentage).ToString("0.0") + "%";
+            }
+            else
+            {
+                _moveInformation.moveChangePercentage = 1f;
+                _moveInformation.moveChangeTotalPercentage = 1f;
+
+                MovePercentageText.text = (100 * _moveInformation.moveChangePercentage).ToString("0.0") + "%";
+                TotalMovePercentageText.text = (100 * _moveInformation.moveChangePercentage).ToString("0.0") + "%";
+            }
+        }
+
+        public void RefreshMovePercentage()
+        {
+            SetMovePercentChange(_moveInformation.moveChangePercentage);
         }
 
         public void SetDescription(string text)

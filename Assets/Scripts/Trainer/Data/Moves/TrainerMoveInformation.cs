@@ -17,6 +17,9 @@ namespace Trainer.Data.Moves
         public string HintOne;
         public string HintTwo;
         public string MoveDescription;
+
+        public float moveChangePercentage;
+        public float moveChangeTotalPercentage;
         
         public int TimesGuessed;
         public int TimesCorrect;
@@ -60,6 +63,8 @@ namespace Trainer.Data.Moves
             yield return new string('\t', depth) + " hint2: " + HintTwo;
             yield return new string('\t', depth) + " Move: " + MoveNotation;
             yield return new string('\t', depth) + " Description: " + MoveDescription;
+            yield return new string('\t', depth) + " moveChangePercentage: " + moveChangePercentage;
+            yield return new string('\t', depth) + " moveChangeTotalPercentage: " + moveChangeTotalPercentage;
             yield return new string('\t', depth) + " Count: " + PossibleNextMoves.Count;
 
             foreach (var nextMove in PossibleNextMoves)
@@ -117,6 +122,36 @@ namespace Trainer.Data.Moves
             else
             {
                 MoveDescription = "";
+            }
+
+            if (fileVersion >= 6)
+            {
+                contents.MoveNext();
+                string moveChangePercentageLine = contents.Current.Trim();
+                if (moveChangePercentageLine.StartsWith("moveChangePercentage: "))
+                {
+                    moveChangePercentage = float.Parse(moveChangePercentageLine.Split(new string[] { "moveChangePercentage: " }, StringSplitOptions.None)[1].Trim());
+                }
+                else
+                {
+                    moveChangePercentage = 0f;
+                }
+
+                contents.MoveNext();
+                string moveChangeTotalPercentageLine = contents.Current.Trim();
+                if (moveChangeTotalPercentageLine.StartsWith("moveChangeTotalPercentage: "))
+                {
+                    moveChangeTotalPercentage = float.Parse(moveChangeTotalPercentageLine.Split(new string[] { "moveChangeTotalPercentage: " }, StringSplitOptions.None)[1].Trim());
+                }
+                else
+                {
+                    moveChangeTotalPercentage = 0f;
+                }
+            }
+            else
+            {
+                moveChangePercentage = 0;
+                moveChangeTotalPercentage = 0;
             }
 
             contents.MoveNext();

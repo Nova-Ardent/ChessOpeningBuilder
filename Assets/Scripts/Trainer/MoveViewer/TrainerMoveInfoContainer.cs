@@ -60,18 +60,24 @@ namespace Trainer.MoveViewer
             }
         }
 
-        public string GetDescription()
+        public void SetMoveChance(float amount)
         {
             if (Moves.Length == 1)
             {
-                return Moves.First().GetDescription();
+                Moves.First().SetMovePercentChange(amount);
             }
             else
             {
-                Debug.LogError("attempting to get description on multiple moves, this is not supported");
-                return "";
+                Debug.LogError("attempting to set chance on multiple moves, this is not supported");
             }
+        }
 
+        public void RefreshAllMoveChances()
+        {
+            foreach (var move in Moves)
+            {
+                move.RefreshMovePercentage();
+            }
         }
 
         TrainerMoveInformationDisplay MakeMoveDisplay(TrainerData.StatsView statsView, TrainerMoveInformation moveInformation, Transform parent)

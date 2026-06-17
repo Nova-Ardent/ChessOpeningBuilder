@@ -99,7 +99,8 @@ namespace Trainer
                 _nextMoveContainer.ClearMoves();
             }
 
-            _trainerOptionsObject.DescriptionInputField.text = _currentMoveContainer.GetDescription();
+            _trainerOptionsObject.DescriptionInputField.text = _currentMove.MoveDescription;
+            _trainerOptionsObject.MoveChanceField.text = (_currentMove.moveChangePercentage * 100).ToString("0.0");
         }
 
         public void AddVariation()
@@ -162,6 +163,15 @@ namespace Trainer
             if (_currentMove != null)
             {
                 _currentMoveContainer.SetDescription(text);
+            }
+        }
+
+        public void SetCurrentMoveMoveChance(float value)
+        {
+            if (_currentMove != null)
+            {
+                _currentMoveContainer.SetMoveChance(value);
+                _nextMoveContainer?.RefreshAllMoveChances();
             }
         }
     }

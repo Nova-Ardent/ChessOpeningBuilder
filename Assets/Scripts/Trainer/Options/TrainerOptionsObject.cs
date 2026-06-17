@@ -27,6 +27,8 @@ namespace Trainer.Options
 
         public TMP_InputField DepthInputField;
         public TMP_InputField DescriptionInputField;
+
+        public TMP_InputField MoveChanceField;
         
         public TMP_InputField EvolutionAccelerationField;
         public GameObject EvolutionMode;
@@ -238,6 +240,29 @@ namespace Trainer.Options
             }
         }
 
+        public void OnMoveChanceChanged()
+        {
+            if (float.TryParse(MoveChanceField.text, out float value))
+            {
+                MoveChanceField.text = value.ToString("0.0");
+                
+                value /= 100;
+                _trainerObject.SetCurrentMoveMoveChance(value);
+
+                if (value <= 0 || value > 1)
+                {
+                    MoveChanceField.text = "100.0";
+                    _trainerObject.SetCurrentMoveMoveChance(1);
+                }
+            }
+            else
+            {
+                MoveChanceField.text = "100.0";
+                _trainerObject.SetCurrentMoveMoveChance(1);
+            }
+
+        }
+
         public void OnEvolutionAccelerationChanged()
         {
             if (int.TryParse(EvolutionAccelerationField.text, out int value))
@@ -259,6 +284,33 @@ namespace Trainer.Options
         public void OnChangeDescription()
         {
             _trainerObject.SetDescriptionOnCurrentMove(DescriptionInputField.text);
+        }
+
+        public void GoToMostLikelyLeafMove()
+        {
+            float mostLikelyLeafPercentage = -1;
+            TrainerMoveInformation mostLikelyLeafMove = TrainerData.StartingMove;
+
+            GetMostLikelyMoveData(TrainerData.StartingMove, ref mostLikelyLeafMove, ref mostLikelyLeafPercentage);
+
+            _trainerObject.UpdateViewedMove(mostLikelyLeafMove);
+        }
+
+        void GetMostLikelyMoveData(TrainerMoveInformation currentMove, ref TrainerMoveInformation mostLikelyLeaf, ref float amount)
+        {
+            if (currentMove.PossibleNextMoves.Count == 0)
+            {
+                if (currentMove.moveChangeTotalPercentage > amount)
+                {
+                    mostLikelyLeaf = currentMove;
+                    amount = currentMove.moveChangeTotalPercentage;
+                }
+            }
+
+            foreach (var nextMove in currentMove.PossibleNextMoves)
+            {
+                GetMostLikelyMoveData(nextMove, ref mostLikelyLeaf, ref amount);
+            }
         }
     }
 }

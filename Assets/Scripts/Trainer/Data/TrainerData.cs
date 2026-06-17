@@ -33,7 +33,7 @@ namespace Trainer.Data
             RepeatVariationOnFailed,
         }
 
-        public const int Version = 5;
+        public const int Version = 6;
 
         public PieceColor Color = PieceColor.White;
         public int Depth = -1;
